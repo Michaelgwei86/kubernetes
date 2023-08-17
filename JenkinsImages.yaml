@@ -1,14 +1,14 @@
 JENKINS INTEGRATION WITH DOCKER IMAGES:
 =======================================
-# This course is designed to run jenkins CI/CD using conatinerization technology
+# This course is designed to run Jenkins CI/CD using containerization technology
 #docker images of jenkins/sonarqube/nexus/tomcat are used and integrated for build
 
 #RESOURCE:
 - Provision a virtual machine of approximately 5G RAM
 
 #IMAGES AND POLICIES
-- Pull and run docker official images of Jenkins sonarqube and nexus and attach restart policies and volume mounts(persistent)
-- The containerPort number for differnt containers can be the same  
+- Pull and run docker official images of Jenkins Sonarqube and nexus and attach restart policies and volume mounts(persistent)
+- The containerPort number for different containers can be the same  
 - The (OS)hostPort number can't be the same 
 Use this command to see all used ports on the hostPort
 netstat -tuln
@@ -16,9 +16,9 @@ netstat -tuln
 
 - JENKINS:
 ===========
-Pull the jenkins official image
+Pull the Jenkins official image
 docker run -d -v jenkins_home:/var/jenkins_home -p 8080:8080 -p 50000:50000 --name jenkins --restart=on-failure jenkins/jenkins:lts-jdk11
-- If you lose your jenkins credentials, go the the command line and 
+- If you lose your Jenkins credentials, go to the command line and 
 you can exec into the container if vi into the file using this command
 
 docker exec -u 0 -it <ContainerID> /bin/bash 
@@ -26,7 +26,7 @@ sudo vi /var/lib/jenkins/config.xml
 
 navigate to the tag below and change the option to false
 
-then restart the jenkins service or stop and start the jenkins container 
+then restart the Jenkins service or stop and start the Jenkins container 
 
 <useSecurity>true</useSecurity>
 
@@ -35,10 +35,10 @@ then restart the jenkins service or stop and start the jenkins container
 
 docker run -d --name sonarqube -e SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true -p 9000:9000 --restart=on-failure sonarqube:latest
 
-the default password for sonarqube is admin pwd admin
+the default password for Sonarqube is admin pwd admin
 for sonarqube integration,
 
-edit the pom.xml file and nagigate to or add the properties tag. Edit the url and add the server ip and sonar port 
+edit the pom.xml file and navigate to or add the properties tag. Edit the URL and add the server IP and sonar port 
  192.168.86.35:9000
 add the sonar username and password 
 admin
@@ -61,19 +61,19 @@ admin123
 =========
 docker run -d -p 8081:8081 --name nexus -v nexus-data:/nexus-data --restart=on-failure sonatype/nexus3
 
-Nexus will promt a file that conains the password to loh=ginto the account. copy the path to the fiel and cat the file using
-ypiur local terminal. If you are using a container, run 
+Nexus will prompt a file that contains the password to log into the account. copy the path to the file and cat the file using
+your local terminal. If you are using a container, run 
 
 docker exec -it <nexusid> cat <pathtofile> /bin/bash
 
-To deploy artifacts to nexus, jenkins needs to communicate with nuxes.
+To deploy artifacts to nexus, Jenkins needs to communicate with Nuxes.
 Go to the nexus UI and on the repo, create a snapshot and release repo
 edit or add the distribution management tag in the pom.xml file and add nexus snapshot and release URL
 
 http://192.168.86.35:8081/repository/Group_go_Snapshot/
 http://192.168.86.35:8081/repository/Group_go_Release/
 
-you also need to vi into the settings.xml file located in the jenkins server and add the login credentials of nexus in the server tag
+you also need to vi into the settings.xml file located in the Jenkins server and add the login credentials of nexus in the server tag
 
 vi /var/jenkins_home/tools/hudson.tasks.Maven_MavenInstallation/maven3.9.4/conf/settings.xml
 
