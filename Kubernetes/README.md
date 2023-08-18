@@ -27,7 +27,7 @@
          DaemonSet
          ReplicationController
  ## WorkerNodes:
-    ====
+ 
   + kubelet: 
     responsible for managing and operating containers. communicate with control-plane 
   it registers nodes into the cluster. It monitors nodes and pods in the cluster every 10 minutes and 
