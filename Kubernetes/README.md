@@ -6,38 +6,38 @@
   
 ### 1.ControlPlane: MasterNode
      ====
-  + ApiServer:  (Primanry mgnt component/ exposes k8s API serving as frontend interface for all cluster operations
+  + ApiServer:  (Primary mgnt component/ exposes k8s API serving as frontend interface for all cluster operations
           handles restful Api from kubelet)
 
   When you run a kubectl command, it communicates with the kube API and then it gets the data from the ETCD
   The request is first authenticated and then validated. 
-  + ETCD:  It is a key value store, It stores the cluster's configuration data,
-  + Scheduler : responsible for making decisions about pod placement on worker nodes in the cluster.
+  + ETCD:  It is a key-value store, It stores the cluster's configuration data,
+  + Scheduler: responsible for making decisions about pod placement on worker nodes in the cluster.
    It examines resource requirements, quality-of-service constraints, 
    affinity, anti-affinity, and other policies to determine the most suitable node for running a pod.
-   it doesnt place resources on nodes but makes the decision
-  + ControllerManagers : Manages Node lifecycle, desired pod number and services 
-  it contineusly monitor the state os resources in the cluster and ensures that they matches the desired state.
-  - Node Controler: monitors the staus of the nodes every 5sec. it waits for 40 secs and if unreacheable, it evicts
+   it doesn't place resources on nodes but makes the decision
+  + ControllerManagers: Manages Node lifecycle, desired pod number, and services 
+  it continuously monitors the state of resources in the cluster and ensures that they match the desired state.
+  - Node Controler: monitors the status of the nodes every 5sec. it waits for 40 secs and if unreachable, it evicts
   the pods running on the node.
-  - ReplicationController: it monitors the status of replica set and make sure the desired states are maintained.
+  - ReplicationController: it monitors the status of the replica set and makes sure the desired states are maintained.
 
-         Replicaset
+         ReplicaSet
          DaemonSet
          ReplicationController
  ## WorkerNodes:
     ====
   + kubelet: 
-    responsible for managing and operating containers. communicate with controlplane 
-  it register nodes into the cluster. It monitors nodes and pods in the cluster every 10minutes and 
+    responsible for managing and operating containers. communicate with control-plane 
+  it registers nodes into the cluster. It monitors nodes and pods in the cluster every 10 minutes and 
   relates feedback to the API which is stored in the etcd.cluster
   + container runtime:
    [Container-d] docker pulling containered images
   + kube-proxy: 
     enables network communication and load balancing between pods and services within the cluster.
-  every pod in a cluster can communicate with other pods in the cluster by using ip address of the pod.
-  to access each pod, a service has to be created and then you cas access the pod by using the service name.
-  the service is not an object, the kube-proxy creates rules that allows traffic routing within the cluster.
+  every pod in a cluster can communicate with other pods in the cluster by using IP address of the pod.
+  to access each pod, a service has to be created and then you can access the pod by using the service name.
+  the service is not an object, the kube-proxy creates rules that allow traffic routing within the cluster.
 
          ClusterIP
          NodePort
@@ -82,7 +82,7 @@ Kubernetes determines the QoS level of pods based on the resource requests and l
 - **Resource Limits:** The maximum amount of resources a pod is allowed to use.
     Exceeding these limits could lead to throttling or pod termination.
 
-Kubernetes uses the relationship between requests and limits to categorize pods into the different QoS classes. 
+Kubernetes uses the relationship between requests and limits to categorize pods into different QoS classes. 
 The actual QoS class assigned to a pod depends on how its requests and limits are set:
 
 - **BestEffort:** Pods with no resource requests or limits.
@@ -96,25 +96,25 @@ and that the cluster operates smoothly without resource contention issues.
 ## PODS:
   ======
 
-- The aim is to deploy application as conatiners running on a set of machines. 
+- The aim is to deploy applications as containers running on a set of machines. 
 - Containers do not run directly on the node but on Pods. 
 - Pod is the single instance of an application and the smallest object in k8s/.
-- If the user base increases, you can scale additional pods on the node and of the node runs out of starage,
-  you can spin up new nodes and assign new pods of thesame or diff containers to it.
-- Two containers of thesame kind can not run in thesame pod.
-- There are multicontainer pods which are helper containers running a process for the pod. they both live and die 
-at thesame time. they can refer to each other using localhost.
+- If the user base increases, you can scale additional pods on the node, and if the node runs out of storage,
+  you can spin up new nodes and assign new pods of the same or diff containers to it.
+- Two containers of the same kind can not run in the same pod.
+- There are multi-container pods which are helper containers running a process for the pod. they both live and die 
+at the same time. they can refer to each other using localhost.
 ```bash
 kubectl run nginx --image nginx
 ```
-it create a pod call nginx and also pulls the image nginx from a public docker repo 
+it creates a pod call nginx and also pulls the image nginx from a public docker repo 
 
 apiVersion: # this is the version of the k8s API, it is mandatory Pod: v1 , service: v1 
 #replicaSet: apps/v1 , Deployment: apps/v1. It is also a string value 
-kind: # this refers to the type of object to be created such as Pod, ReplicaSet, Deployment etc string
-metadata: # this is data about the object such as name, labels. Metadat is a dictionary, it is indented
+kind: # This refers to the type of object to be created such as Pod, ReplicaSet, Deployment, etc string
+metadata: # This is data about the object such as name and labels. Metadata is a dictionary, it is indented
    name: myapp #
-   labels: # it is a dictionary and can take anykind of key-value pair such as
+   labels: # it is a dictionary and can take any kind of key-value pair such as
       app: myapp # It is a string
       type: front-end
 note: you can only add name and labels under metadata or specification from k8s 
@@ -125,10 +125,8 @@ spec: # this provides additional information about the object to create. it varr
       - name:
         image:
 
-
-
-  example:
-
++  example:
+```sh
 apiVersion: v1
 Kind: Pod
 metadata:
@@ -139,23 +137,24 @@ metadata:
 spec:
   container:
   - name: nginx-container
-    image: nginx 
-
+    image: nginx
+```
+```sh
 - kubectl apply/create -f <filename> #to create declaratively from a yml file
 - kubectl get/describe pods <podname> #to get the pod spec
 - kubectl create deployment redis-deployment --image=redis123 --dry-run=client -o yaml > deployment.yaml
 - kubectl create deployment redis-deployment --image=redis123 -o yaml #print out output
 - kubectl edit pod <podname>
-
+```
 ## REPLICASETS:
    ============
 Controllers are the brain behind k8s, they monitor k8s objects and respond accordingly.
 - the replication controller helps increase the number of pods in the node for high availability.
 - It also serves as recreating a pod if it fails.
-- It creates pods accross nodes to balance load
+- It creates pods across nodes to balance the load
 - replication controller is replaced by replicasets
-- it maintains the desired number of pods specified in your object defination file 
-
+- it maintains the desired number of pods specified in your object definition file 
+```sh
 apiVersion: v1
 kind: ReplicationController    #DEPRICATED
 metadata:
@@ -164,7 +163,7 @@ metadata:
         app: myapp
         type: fe
 spec:
-  template: # here you provide a pod template whichh is intended to be managed by the replicationcontroller
+  template: # Here you provide a pod template which is intended to be managed by the replicationcontroller
     metadata:
         name: myapp 
         labels:
@@ -175,14 +174,15 @@ spec:
        - name: nginx-container
          image: nginx 
   replicas: 3
-
+```
+```sh
 - kubectl create -f <filename>
 - kubectl get rc 
-
-# replicasets requires a seletor field | it is not a must
-# it helps the replicaaset defines what pods fall under it although pod spec has already been mentioned in the spec
-# this is because it can manage pods which were not created to be managed by the rs
-
+```
+#replicasets requires a selector field | it is not a must
+#It helps the replica set defines what pods fall under it although pod spec has already been mentioned in the spec
+#This is because it can manage pods that were not created to be managed by the rs
+```sh
 apiVersion: apps/v1
 Kind: ReplicaSet
 metadata: 
@@ -198,20 +198,23 @@ spec:
   replicas: 3
   selector:
     matchLabels:
-      type: front-end # this must match the label that was inputed in the object metadata section
-
-- k get rs 
-- k get pods 
-
+      type: front-end # This must match the label that was input in the object metadata section
+```
+```sh
+k get rs 
+k get pods 
+```
 ## Labels and Selectors:
   =====================
-Labels are used as filters for ReplicaSet. Labels allow the rs to know what pod in the cluster or nodes 
-placed under its management, since there could be multiple pods running in the cluster.
-- the template defination section is required in every rs, even for pods that were created before the rs 
-- this is due to the fact that if the pod fails and is to be recreated, it will need the spec to recreat it
++ Labels are used as filters for ReplicaSet. Labels allow the rs to know what pod in the cluster or nodes 
+placed under its management since there could be multiple pods running in the cluster.
++ the template definition section is required in every rs, even for pods that were created before the rs 
++ this is due to the fact that if the pod fails and is to be recreated, it will need the spec to recreate it
 
-- if you want to scale from 3 to 6 replicas, update the replicas to 6 and run 
+- if you want to scale from 3 to 6 replicas, update the replicas to 6 and run
+```sh
  kubectl replace -f <filename>
  kubectl scale --replicas=6 <filename>
  kubectl scale -- replicas replicaset name 
  kubectl edit pod/rs/rc/deploy <podname>
+```
