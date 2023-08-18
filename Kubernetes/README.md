@@ -4,19 +4,19 @@
  ## K8S ARCHITECTURE:
    
   
-### 1.ControlPlane: MasterNode
+### ControlPlane: MasterNode
      
   + ApiServer:  (Primary mgnt component/ exposes k8s API serving as frontend interface for all cluster operations
           handles restful Api from kubelet)
 
   + When you run a kubectl command, it communicates with the kube API and then it gets the data from the ETCD
   + The request is first authenticated and then validated. 
-  + ETCD:  It is a key-value store, It stores the cluster's configuration data,
-  + Scheduler: responsible for making decisions about pod placement on worker nodes in the cluster.
+  + 1 **ETCD**:  It is a key-value store, It stores the cluster's configuration data,
+  + 2 **Scheduler**: responsible for making decisions about pod placement on worker nodes in the cluster.
    It examines resource requirements, quality-of-service constraints, 
    affinity, anti-affinity, and other policies to determine the most suitable node for running a pod.
    it doesn't place resources on nodes but makes the decision
-  + ControllerManagers: Manages Node lifecycle, desired pod number, and services it continuously monitors the state of resources in
+  + 3 **ControllerManagers**: Manages Node lifecycle, desired pod number, and services it continuously monitors the state of resources in
      the cluster and ensures that they match the desired state.
   + Node Controler: monitors the status of the nodes every 5sec. it waits for 40 secs and if unreachable, it evicts
   the pods running on the node.
@@ -28,13 +28,13 @@
          ReplicationController
  ## WorkerNodes:
  
-  + kubelet: 
-    responsible for managing and operating containers. communicate with control-plane 
+  + 1 **kubelet**: 
+     responsible for managing and operating containers. communicate with control-plane 
   it registers nodes into the cluster. It monitors nodes and pods in the cluster every 10 minutes and 
   relates feedback to the API which is stored in the etcd.cluster
-  + container runtime:
+  + 2 **container runtime**:
    [Container-d] docker pulling containered images
-  + kube-proxy: 
+  + 3 **kube-proxy**: 
     enables network communication and load balancing between pods and services within the cluster.
   every pod in a cluster can communicate with other pods in the cluster by using IP address of the pod.
   to access each pod, a service has to be created and then you can access the pod by using the service name.
