@@ -11,12 +11,15 @@
 
   + When you run a kubectl command, it communicates with the kube API and then it gets the data from the ETCD
   + The request is first authenticated and then validated. 
-  + 1 **ETCD**:  It is a key-value store, It stores the cluster's configuration data,
-  + 2 **Scheduler**: responsible for making decisions about pod placement on worker nodes in the cluster.
+  + 1. **ETCD:**
+    It is a key-value store, It stores the cluster's configuration data,
+  + 2 **Scheduler:**
+    responsible for making decisions about pod placement on worker nodes in the cluster.
    It examines resource requirements, quality-of-service constraints, 
    affinity, anti-affinity, and other policies to determine the most suitable node for running a pod.
    it doesn't place resources on nodes but makes the decision
-  + 3 **ControllerManagers**: Manages Node lifecycle, desired pod number, and services it continuously monitors the state of resources in
+  + 3. **ControllerManagers:**
+       Manages Node lifecycle, desired pod number, and services it continuously monitors the state of resources in
      the cluster and ensures that they match the desired state.
   + Node Controler: monitors the status of the nodes every 5sec. it waits for 40 secs and if unreachable, it evicts
   the pods running on the node.
@@ -28,13 +31,13 @@
          ReplicationController
  ## WorkerNodes:
  
-  + 1 **kubelet**: 
+  + 1. **kubelet**: 
      responsible for managing and operating containers. communicate with control-plane 
   it registers nodes into the cluster. It monitors nodes and pods in the cluster every 10 minutes and 
   relates feedback to the API which is stored in the etcd.cluster
-  + 2 **container runtime**:
+  + 2. **container runtime**:
    [Container-d] docker pulling containered images
-  + 3 **kube-proxy**: 
+  + 3. **kube-proxy**: 
     enables network communication and load balancing between pods and services within the cluster.
   every pod in a cluster can communicate with other pods in the cluster by using IP address of the pod.
   to access each pod, a service has to be created and then you can access the pod by using the service name.
@@ -57,7 +60,6 @@ workloads receive the necessary resources and performance, while also allowing f
 utilization.
 
 ## QUALITY OF SERVICE IN KUBERNETES:
-   =================================
 
 Kubernetes offers three levels of Quality of Service:
 
@@ -95,8 +97,6 @@ within a Kubernetes cluster. Properly configured QoS levels help ensure that cri
 and that the cluster operates smoothly without resource contention issues.
 
 ## PODS:
-  ======
-
 - The aim is to deploy applications as containers running on a set of machines. 
 - Containers do not run directly on the node but on Pods. 
 - Pod is the single instance of an application and the smallest object in k8s/.
@@ -148,7 +148,6 @@ spec:
 - kubectl edit pod <podname>
 ```
 ## REPLICASETS:
-   ============
 Controllers are the brain behind k8s, they monitor k8s objects and respond accordingly.
 - the replication controller helps increase the number of pods in the node for high availability.
 - It also serves as recreating a pod if it fails.
@@ -206,7 +205,6 @@ k get rs
 k get pods 
 ```
 ## Labels and Selectors:
-  =====================
 + Labels are used as filters for ReplicaSet. Labels allow the rs to know what pod in the cluster or nodes 
 placed under its management since there could be multiple pods running in the cluster.
 + the template definition section is required in every rs, even for pods that were created before the rs 
