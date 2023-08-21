@@ -207,8 +207,8 @@ k get pods
 ## Labels and Selectors:
 + Labels are used as filters for ReplicaSet. Labels allow the rs to know what pod in the cluster or nodes 
 placed under its management since there could be multiple pods running in the cluster.
-+ the template definition section is required in every rs, even for pods that were created before the rs 
-+ this is due to the fact that if the pod fails and is to be recreated, it will need the spec to recreate it
++ The template definition section is required in every rs, even for pods that were created before the rs 
++ This is due to the fact that if the pod fails and is to be recreated, it will need the spec to recreate it
 
 - if you want to scale from 3 to 6 replicas, update the replicas to 6 and run
 ```sh
@@ -217,3 +217,237 @@ placed under its management since there could be multiple pods running in the cl
  kubectl scale -- replicas replicaset name 
  kubectl edit pod/rs/rc/deploy <podname>
 ```
+## Deployments
+
++ When you want to deploy an application, you may want to deploy several pods of that application for high 
+availability. When a newer version of that application is available in docker, you want to gradually update
+to avoid downtime of the application.
+suppose an update has issues, you will want to do a rollback to the previous working version   
++ You can also make changes such as resources and the number of pods.
++ Deployment provides the capability to upgrade the underlying instance such as rolling-update, pause, upgrade
+
+```sh
+apiVersion: apps/v1
+Kind: Deployment
+metadata: 
+  name: myapp-deployment
+  labels:
+    app: myapp 
+    type: front-end
+spec:
+  template:
+    metadata:
+      name: myapp
+      labels:
+        app: myapp
+        type: front-end
+    spec:
+      container:
+      - name: nginx-container
+        image: nginx 
+  replicas: 3
+  selector:
+    matchLabels:
+      type: front-end # This must match the label that was input in the object metadata section
+```
+```sh
+kubectl get deployment
+kubectl create deployment --image=nginx nginx --dry-run=client -o yaml
+kubectl create deployment --image=nginx nginx --dry-run=client -o yaml > nginx-deployment.yaml
+kubectl create deployment --image=nginx nginx --replicas=4 --dry-run=client -o yaml > nginx-deployment.yaml
+```
+
+## Services
+Kubernetes service enables communication between various components within and outside the application and between  
+other applications and users. Services enable the frontend app to be available to users and btw frontend and backend
+
+For external communication,
+
+the Kubernetes node has an IP, the host OS which is in the same network has an IP (private), and the pod has an ip but on  
+a separate network
+To access the application externally, the k8s service enables that communication from pods on nodes
+
+TYPES:
+
+1. NodePort:
+The k8s service maps a port on the Node to a port on the Pod(target)
+the NodePort is a port range on the Node that gives external access. it ranges from 30000-32767
+
+apiVersion: v1
+Kind: Service
+metadata: 
+  name: myapp-svc
+spec:
+  type: NodePort
+  ports:
+    - targetPort: 80  # (port on Pod). it will assume port if not specified
+      port: 80 # port on service. this is a mandatory field
+      nodePort: 30008  #external node port on service 30000-32767. a random port will be allocated if not specified
+  selector:
+    app: myapp # This is the label that was used in the deployment metadata section
+    type: front-end
+
+kubectl create -f <filename>
+kubectl get svc 
+curl IP:30008
+
+- In the case of multiple pods running the same application, you need to maintain the labels and selector section with
+the same values. the service uses a random algorithm to route traffic to all pods with that same label.
+- If the pods are running on different nodes in the cluster, you can access it by calling the ip of any node in the  
+cluster. Service is a cluster-wide resource in k8s.
+
+2. *ClusterIP*:
+
+  A full-stack web app typically has a number of pods such as frontend pods hosting a web server,
+  the backend hosting the app, and pods hosting a db. Kubernetes service can group all pod groups together 
+  and provide a single backend to access the pods. you can create another service for all pods running the db 
+  these pods for diff applications can therefore be scaled like microservices without impacting the other.
+  A separate svc for frontend, for backend, and for db. 
+  - This type of service that allows communication between pods in a cluster is called cluster ip service.
+
+apiVersion: v1
+Kind: Service
+metadata: 
+  name: backend
+spec:
+  type: ClusterIP
+  ports:
+    - targetPort: 80  # (port on Pod). it will assume port if not specified
+      port: 80 # port on service. this is a mandatory field
+  selector:
+    app: myapp # This is the label that was used in the deployment metadata section
+    type: backend
+
+kubectl create -f <filename>
+kubectl get svc 
+
+the service can be accessed by other pods in the cluster using the service name or ClusterIP
+
+3. LoadBalancer:
+When multiple pods of an application are deployed, they can all be accessed by using the diff IPs of the nodes
+mapped to the nodePort. 
+But end users need to be provided with a single endpoint that can route traffic to all the pods.
+K8s have native support for cloud platforms 
+
+apiVersion: v1
+Kind: Service
+metadata: 
+  name: backend
+spec:
+  type: LoadBalancer
+  ports:
+    - targetPort: 80  # (port on Pod). it will assume port if not specified
+      port: 80 # port on service. this is a mandatory field
+  selector:
+    app: myapp # This is the label that was used in the deployment metadata section
+    type: backend
+
+NAMESPACES:
+
+  A namespace is simply a distinct working area in k8s where a defined set of resources and rules and users can  
+  be assigned to a namespace. 
+- By default, a k8s cluster comes with a default namespace. Here, a user can provision resources.
+- the subsystem namespace is also created by default for a set of pods and services for its functioning.
+- The kubepublic is also created to host resources that are made available to the public.
+- Within a cluster, you can create diff namespaces for different projects and allocate resources to that namespace.
+- Resources from the same namespaces can refer to each other by their names,
+- they can also communicate with resources from another namespace by their names and append their namespace.
+eg msql.connect("db-service.dev.svc.cluster.local")
+
+kubectl get pods > will list only pods in the default namespace
+kubectl get pods --namespace=kubesystem
+
+kubectl apply -f <filename>  ==> will create object in the default namespace
+kubectl create -f <filename> --namespace=kubesystem  ==> will create object in the kubesystem namespace
+
+to ensure that your resources are always created in a specific namespace, add the namespace block in the resources
+definition file
+
+apiVersion: v1
+Kind: Service
+metadata: 
+  name: backend
+  namespace: dev  # This resource will always be created in the dev namespace, and will create the ns if it didn't exist
+spec:
+  type: LoadBalancer
+  ports:
+    - targetPort: 80  # (port on Pod). it will assume port if not specified
+      port: 80 # port on service. this is a mandatory field
+  selector:
+    app: myapp # This is the label that was used in the deployment metadata section
+    type: backend
+
+apiVersion: v1
+Kind: NameSpace
+metadata:
+  name: dev
+OR 
+ kubectl create namespace dev
+ kubectl get ns 
+
+to set a namespace as the default namespace so that you don't always have to pass the NameSpace command, you need to set
+set the namespace in the current context
+
+kubectl config set-context $(kubectl config current-context) --namespace=dev
+contexts are used to manage all resources in clusters from a single system 
+
+to view resources in all NameSpaces use the 
+kubectl get pods --all-namespaces
+
+Resource Quota:
+  to set a limit for resources in a namespace, create a resource-quota object in
+
+apiVersion: v1
+Kind: ResourceQuota
+metadata:
+  name: compute-quota
+  namespace: dev
+spec:
+  hard:
+    pods: "10"
+    requests.cpu: "4"
+    requests.memory: 5Gi
+    limits.cpu: "10"
+    limits.memory: 10Gi
+
+kubectl apply -f <filename>
+
+
+
+Declarative and Imperative :
+  these are different approaches to creating and managing infrastructure in IaC.
+- The Imperative approach is giving just the required infrastructure and the resource figures out the steps involved.
+eg kubectl create deployment nginx --image nginx
+    kubectl set image deployment nginx nginx=nginx:1.18
+    kubectl replace -f nginx.yaml
+
+    it creates resources quickly but is difficult to edit or understand what was involved.
+
+- in the Declarative approach, a step-by-step approach through writing configuration files
+   Here we can write configuration files 
+   Here, changes can be made as well as the resources can be versioned.
+   resources can also be edited in the running state using the kubectl edit command
+   The best practice is always to edit the configuration file and run the replace command rather than using the edit command.
+
+   when you use the kubectl apply command, it will create objects that do not exist, and when you want to update the object,
+   edit the yml file and run kubectl apply again and the object will pick up the latest changes in the file.
+
+- kubectl run --image=nginx nginx 
+- kubectl create deployment --image=nginx nginx 
+- kubectl edit deployment nginx 
+- kubectl scale deployment nginx --replicas=5
+- kubectl set image deployment nginx nginx=nginxv
+
+kubectl run nginx --image=nginx --dry-run=client -o yaml    > nginx-deployment.yaml
+kubectl create service clusterip redis --tcp=6379:6379 --dry-run=client -o yaml 
+kubectl expose pod nginx --type=NodePort --port=80 --name=nginx-service --dry-run=client -o yaml
+k create deploy redis-deploy --image=redis --replicas=2 --namespace=dev-ns
+
+
+kubectl run httpd --image=httpd:alpine --port=80 --expose   #will create pod and service
+
+
+when you run a kubectl apply command, if the object stated in the file does not exist, it is created.
+another live object configuration is created with additional fields and can be viewed using the  
+- kubectl edit/describe object <objectName>
+there is the last applied file that provides details about the last image of the live configuration.
