@@ -269,7 +269,7 @@ the Kubernetes node has an IP, the host OS which is in the same network has an I
 a separate network
 To access the application externally, the k8s service enables that communication from pods on nodes
 
-##TYPES:
+## TYPES:
 
 1. NodePort:
 The k8s service maps a port on the Node to a port on the Pod(target)
@@ -298,7 +298,7 @@ the same values. the service uses a random algorithm to route traffic to all pod
 - If the pods are running on different nodes in the cluster, you can access it by calling the ip of any node in the  
 cluster. Service is a cluster-wide resource in k8s.
 
-2. *ClusterIP*:
+## 2. *ClusterIP*:
 
   A full-stack web app typically has a number of pods such as frontend pods hosting a web server,
   the backend hosting the app, and pods hosting a db. Kubernetes service can group all pod groups together 
@@ -306,7 +306,7 @@ cluster. Service is a cluster-wide resource in k8s.
   these pods for diff applications can therefore be scaled like microservices without impacting the other.
   A separate svc for frontend, for backend, and for db. 
   - This type of service that allows communication between pods in a cluster is called cluster ip service.
-
+```sh
 apiVersion: v1
 Kind: Service
 metadata: 
@@ -319,18 +319,18 @@ spec:
   selector:
     app: myapp # This is the label that was used in the deployment metadata section
     type: backend
-
+```
 kubectl create -f <filename>
 kubectl get svc 
 
 the service can be accessed by other pods in the cluster using the service name or ClusterIP
 
-3. LoadBalancer:
+### 3. LoadBalancer:
 When multiple pods of an application are deployed, they can all be accessed by using the diff IPs of the nodes
 mapped to the nodePort. 
 But end users need to be provided with a single endpoint that can route traffic to all the pods.
 K8s have native support for cloud platforms 
-
+```sh
 apiVersion: v1
 Kind: Service
 metadata: 
@@ -343,8 +343,8 @@ spec:
   selector:
     app: myapp # This is the label that was used in the deployment metadata section
     type: backend
-
-##NAMESPACES:
+```
+## NAMESPACES:
 
   A namespace is simply a distinct working area in k8s where a defined set of resources and rules and users can  
   be assigned to a namespace. 
@@ -364,7 +364,7 @@ kubectl create -f <filename> --namespace=kubesystem  ==> will create object in t
 
 to ensure that your resources are always created in a specific namespace, add the namespace block in the resources
 definition file
-
+```sh
 apiVersion: v1
 Kind: Service
 metadata: 
@@ -378,11 +378,14 @@ spec:
   selector:
     app: myapp # This is the label that was used in the deployment metadata section
     type: backend
+```
 
+```sh
 apiVersion: v1
 Kind: NameSpace
 metadata:
   name: dev
+```
 OR 
  kubectl create namespace dev
  kubectl get ns 
@@ -393,12 +396,12 @@ set the namespace in the current context
 kubectl config set-context $(kubectl config current-context) --namespace=dev
 contexts are used to manage all resources in clusters from a single system 
 
-to view resources in all NameSpaces use the 
+To view resources in all NameSpaces use the 
 kubectl get pods --all-namespaces
 
-Resource Quota:
-  to set a limit for resources in a namespace, create a resource-quota object in
-
+### Resource Quota:
+To set a limit for resources in a namespace, create a resource-quota object in
+```sh
 apiVersion: v1
 Kind: ResourceQuota
 metadata:
@@ -411,7 +414,7 @@ spec:
     requests.memory: 5Gi
     limits.cpu: "10"
     limits.memory: 10Gi
-
+```
 kubectl apply -f <filename>
 
 ### Declarative and Imperative :
