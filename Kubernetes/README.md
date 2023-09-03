@@ -267,13 +267,13 @@ For external communication,
 
 the Kubernetes node has an IP, the host OS which is in the same network has an IP (private), and the pod has an ip but on  
 a separate network
-To access the application externally, the k8s service enables that communication from pods on nodes
+To access the application externally, the k8s service enables communication from pods on nodes
 
 ## TYPES:
 
-1. NodePort:
+### 1. *NodePort*:
 The k8s service maps a port on the Node to a port on the Pod(target)
-the NodePort is a port range on the Node that gives external access. it ranges from 30000-32767
+The NodePort is a port range on the Node that gives external access. it ranges from 30000-32767
 
 apiVersion: v1
 Kind: Service
@@ -283,7 +283,7 @@ spec:
   type: NodePort
   ports:
     - targetPort: 80  # (port on Pod). it will assume port if not specified
-      port: 80 # port on service. this is a mandatory field
+      port: 80 # port on service. This is a mandatory field
       nodePort: 30008  #external node port on service 30000-32767. a random port will be allocated if not specified
   selector:
     app: myapp # This is the label that was used in the deployment metadata section
@@ -303,7 +303,7 @@ cluster. Service is a cluster-wide resource in k8s.
   A full-stack web app typically has a number of pods such as frontend pods hosting a web server,
   the backend hosting the app, and pods hosting a db. Kubernetes service can group all pod groups together 
   and provide a single backend to access the pods. you can create another service for all pods running the db 
-  these pods for diff applications can therefore be scaled like microservices without impacting the other.
+  These pods for different applications can therefore be scaled like microservices without impacting the other.
   A separate svc for frontend, for backend, and for db. 
   - This type of service that allows communication between pods in a cluster is called cluster ip service.
 ```sh
@@ -325,7 +325,7 @@ kubectl get svc
 
 the service can be accessed by other pods in the cluster using the service name or ClusterIP
 
-### 3. LoadBalancer:
+### 3. *LoadBalancer*:
 When multiple pods of an application are deployed, they can all be accessed by using the diff IPs of the nodes
 mapped to the nodePort. 
 But end users need to be provided with a single endpoint that can route traffic to all the pods.
@@ -362,7 +362,7 @@ kubectl get pods --namespace=kubesystem
 kubectl apply -f <filename>  ==> will create object in the default namespace
 kubectl create -f <filename> --namespace=kubesystem  ==> will create object in the kubesystem namespace
 
-to ensure that your resources are always created in a specific namespace, add the namespace block in the resources
+To ensure that your resources are always created in a specific namespace, add the namespace block in the resources
 definition file
 ```sh
 apiVersion: v1
@@ -622,7 +622,7 @@ APPLICATION LIFECYCLE MANAGEMENT:
 
 there are two types of deployment strategies.
 
-## 2. ECREATE:
+## 2. RECREATE:
 - You can delete the existing deployment and then make a new deployment with the newer version
 - This will lead to app downtime. this is not the k8s default strategy.
   
