@@ -269,7 +269,7 @@ the Kubernetes node has an IP, the host OS which is in the same network has an I
 a separate network
 To access the application externally, the k8s service enables that communication from pods on nodes
 
-TYPES:
+##TYPES:
 
 1. NodePort:
 The k8s service maps a port on the Node to a port on the Pod(target)
@@ -344,7 +344,7 @@ spec:
     app: myapp # This is the label that was used in the deployment metadata section
     type: backend
 
-NAMESPACES:
+##NAMESPACES:
 
   A namespace is simply a distinct working area in k8s where a defined set of resources and rules and users can  
   be assigned to a namespace. 
@@ -453,3 +453,502 @@ when you run a kubectl apply command, if the object stated in the file does not 
 another live object configuration is created with additional fields and can be viewed using the  
 - kubectl edit/describe object <objectName>
 there is the last applied file that provides details about the last image of the live configuration.
+
+
+SCHEDULING:
+============
+
+- there is a builtin scheduler in the cluster controlplane, that scans through nodes in the cluster and schedules
+  pods on nodes based on several factors such as resource,
+- But if you want to overide and schedule your pods on specific nodes for some reasons, you can do that by
+  specifying the nodeName in the pod defination file.
+- If a scheduler does not exist in the cluster, the pod will continually be in pending state.
+- If you need a pod to run on a specific node, declare in at the time of creation.
+- Kubernetes does not allow node modification after the pod has already been created.
+- It can only be modified by creating a binding object and setting the target to the NodeName and then send a post 
+ request to the pod's binding API.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  -  image: nginx
+     name: nginx
+  nodeName: controlplane
+
+RESOURCE REQUIREMENTS:
+=======================
+- ever pod requires a set of resources to run.
+when a podd is plcaed on a node, it consumes the resources on that node.
+the scheduler determines the node a pod will be scheduled on based on resource availability.
+if nodes have insfficient resrources, the scheduler keeps the pod in pending state.
+- you can specify the resource requested by  a pod to run.
+the scheduler will look for a node that has that resource specification and place that pod on it.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+    resources:
+      requests:
+        memory: "4Gi"
+        cpu: 2
+      limits:
+        memory: 
+        cpu: 
+  nodeName: controlplane
+
+- when a pod tried to exceed reouces out of it limits, the system throttles the containers so that it doesnt
+  use more than it limit,
+- as for memory, a container can use more memory resources than its limit. but a pod ccan not
+- By default, k8s does not have request and limit set, therefore resources can consume as much as they need.
+- One pod can consume more and prevent other from running.
+- When a cpu limit is set without request, k8s sets request to thesame as limit
+- When cpu request and limits are set, then they stay within the range. But if one pod isnt sonsuming resources,
+  then it is securing resources that other pods could use.
+- When request are set without limits, any pods can consume as mamny cpus are required and when a pod needs more  
+  resources, it has a gauranteed resource but without a limit. Make sure all pods have requests set.
+
+LimitRanges as objects can be used to ensure that every pod created has some default values at the namespace level.
+You can set it for both cpu and memory at the ns level. all pods will assume that standard.
+ResourceQuota can also be sued to set resource limits at the level of the NameSpace.
+
+DEAMONSETS:
+
+Deamonsets are like replicasets which helps you run one instance of pods, but it runs one copy of your pod on every  
+node on the cluster.
+the deamonset ensures that one copy of the pod is alway runniing on every node in the cluster.
+A use case is that if you are deploying a log collecting or moniroting agent .
+objevts like the kube-proxy and network uses deamonsets because they have to run on every node.
+
+apiVersion: apps/v1
+kind: Deamonset
+metadata:
+  name: monitoring-agent
+spec:
+  selector: monitoring-agent
+  matchLabels:
+    app: monitoring-agent
+  template:
+    metadata:
+      labels:
+        app: monitoring-agent
+    spec:
+      containers:
+      - image: monitoring-agent
+        name: monitoring-agent
+k create -f <filename>
+kubectl get deamonsets 
+kubectl describe deamonsets
+kubectl get daemonsets --all-namespaces 
+
+- How do you get pods to be scheduled on every node?
+- one approach is to use the nodename to bypass the scheduler and place a pod on a desired node.
+- 
+
+STATIC PODS:
+============
+- Without the controlplane which contains the api server, you can store your configuration files at the path 
+  /etc/kubernetes/manifest,.
+- kubernetes frequently visits this directory and any manifest file here to create pods will creat the pod.
+- it can create only pods, other object will need the controlplane
+- the static pod folder can be any directory, but the path set in the kubelet.service file in the kubeconfig.yaml
+- static pods can be viewed by running the docker ps command.
+- The kubelet can create resources in k8s either by using confguration files or by listening the kube API endpoints
+  from the control controlplane.
+- If you run the k get pods comand, it will also list the static pods. this is blc a mirror of the static pods are  
+- created in the kubeapi but like other pods, can not be edited, except in the pod defination files.
+- A use case for static pods is when you want to install componenst pf the k8s controlplane on every node, the you start 
+  by installing the kubelet service and then create pod defination files that uses docker images of all other 
+  components of the controlplane and place them in the etc/kubernetes/manifest dir
+
+kubectl get pods -n kube-system
+
+Multiple Schedulers:
+====================
+You can deploy an optional scheduler added to thecustom schedueler and configure it to schedule specific pods.
+you can use a pod defination file or wget the scheduler binary and remane the scheduler to a different name.
+to make sure that your object to be created is managed by that scheduler, you can add a scheduler option under
+spec section and pass the name of the scheduler.
+
+kubectl logs object objectname
+
+scheduling queu ===> priority sort
+filtering       ===> NodeName/NodeUnschedulable/NodeReourceFit
+scoring         ===> NodeReourceFit/ImageLocality
+binding         ===> Defaultbinding
+
+LOGGING AND MONITORING:
+=======================
+We can monitor the applications deployed in k8s as well as the kubernetes cluster.
+to monitor resources in the cluster, we can monitor
+- node level metrics  #number of nodes, healthy, memory peformance, cpu utilization
+- pod level metric # number of pods and their cpu utilization
+
+Kubernetes by default doesnot come with any monitoring agent but metric servers can be used and other resources  
+such as prometheus.
+- You can have one metric server per cluster, the metric server retrives metrics from pods and nodes  
+ and stores them in memory. It does not store the metric in the disk and so you can not store see historical metric.
+
+You can clone the metric server from the github repo and run it. 
+cluster performance can be seen by running  
+
+kubectl top node 
+kubectl top pods
+
+managing application logs: 
+  when you run a container in a pod, you can stream the logs by running the  
+   kubectl logs -f <podname>
+in the case of a multicontainer pods, you need to specify the name of the container individually.
+
+APPLICATION LIFECYCLE MANAGEMENT:
+=================================
+1. Rolling Update and rollback:
+  when you first create a deployment, it trigger s a rollout which can be rev 1
+  later when the image is updated, a new rollout is made called rev2
+  to see the status of the rollout, run the  
+  kubectl rollout status deployment/<deploymentname>
+
+  to see the revision and the rollout hostory, run the
+   kubectl rollout history deployment/myapp-deployment
+
+there are two type of deployment strategies.
+
+-RECREATE:
+- you can delete existing deployment and then make a new deployment with the newer version
+- this will lead to app downtime. this is not the k8s default strategy.
+- ROLLINGUPDATE:
+- Here, pods replicas are progressively destroyed and replaced with newer pods to ensure there is no downtime 
+- this is the k8s default update strategy.
+
+update can be done by changing the version ofthe image, replicas  
+kubectl apply -f <filename>
+
+it is advisable to manually edit the defination file than using imperative approach because with an Imperative,
+changes will not be saved in the defination file.
+
+to rollback run the kubectl rolout undo deployment/myapp-deployment
+
+kubectl apply -f deployment
+kubectl get deployment
+kubectl rollout status deployment/myapp-deployment
+kubectl rollout history deployment/myapp-deployment
+kubectl rollout undo deployment/app 
+
+ConfigMaps:
+===========
+this is a way of managing environmantal variables in k8s. you can manually inject these variable by passing them  
+as env. But with many def file that requires these variable, then you need to create then as a seprate object in k8s 
+and simply reference then in your object defination file. Thes can be done using ConfigMaps and Secrets.
+
+ConfigMaps are used to pass configuration data in the form of key value pairs in k8s and then injected into pods.
+
+kubectl create configmap <ConfigName> --from-literal=APP_COLOR=blue \
+                                   --from-literal=APP_MODE=prod  
+                   OR 
+kubectl create configmap app-config --from-file=<pathtofile>
+
+APP_COLOR: blue 
+APP_MODE: prod
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  APP_COLOR: blue 
+  APP_MODE: prod
+
+kubectl get configmaps
+
+
+to inject the  env to the runnig container, add the envFrom section under the spec section  
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+    ports:
+      - containerPort: 8080
+    envFrom:
+      - configMapRef:
+        name: app-config
+
+to create resource, use kubectl create -f <filename>
+
+You can also ref a single env from a configmap 
+
+env:
+  - name: APP_COLOR
+  valueFrom:
+    configMapKeyRef:
+      name: app-config
+      key: APP_COLOR
+
+You can as well inject it as a volume
+
+volumes:
+- name: app-config-volume
+  ConfigMap:
+    name: app-config
+
+SECRETS:
+========
+Secrets just like configmaps are used to store configuration data which can be injected into an object in k8s.
+Unlike configmaps, secrets stores sensitive data such as passwords and keys in an encoded manner.
+You can creatae a secret imperatively by using:
+  kubectl create secret generic <secretName> app-secret --from-literal=DB_Host=mysql   \
+                                                        --from-literal=DB_User=root
+
+    You can ref the secret from a file using the --from-file=app-secret
+    For a declerative approach
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+data:
+  DB_Host: mysql
+  DB_User: root 
+  DB_Password: password
+
+It is however not advisable to pass your secrets in plan text as if fdefeats the entire purpose.
+To convert the data from plaintext to an encoded format, on a linux system, use the  
+ 
+echo -n 'mysql' | base64
+echo -n 'root' | base64
+echo -n 'password' | base64
+
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+data:
+  DB_Host: sjhdvdv=
+  DB_User: fnvjsf== 
+  DB_Password: sffvnhri
+
+copy the corresponding encoded values and replace inject them into the file.
+
+kubectl get secrets app-secret
+kubectl describe secrets
+kubectl get secrets app-secret -o yaml
+
+to decode encoded values use the  
+
+echo -n 'djvfjdo=' | base64 --decode
+
+to inject encoded values into the pod object, use the 
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+    ports:
+      - containerPort: 8080
+    envFrom:
+      - secretRef:
+        name: app-secret
+
+Secrets are not encypted but rather encoded and can be decoded using thesame method. Therefore, do not upload your
+secret files to the github repo.
+
+You can enable encrption atrest:
+kubectl get secrets --all-namespaces -o jason | kubectl replace -f -
+
+https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
+
+Multi Container PODS:
+=====================
+the idea of decoupling a large mom=nolithic application into a small components called microservices,
+allows us to deploy a set of small independent ans reusable code. This set up allows us to manage, or update only,
+small portions of the app instead of the entire app. It might require that running two app or components in thesame  
+container. An example is a web server and a log agent deployed in thesame container. They sahre thesame lifecycle,
+they are created and destroyes together, they sahre thesame network, and thesame volume resources.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    name: webapp
+spec:
+  containers:
+  - image: nginx     # container1
+    name: nginx
+    ports:
+      - containerPort: 8080
+  - image: log-agent     #container2
+    name: log-agent
+
+https://kubernetes.io/docs/tasks/access-application-cluster/communicate-containers-same-pod-shared-volume/
+    
+to exec into a container in kubernetes, run the 
+kubectl -n <Namespace> exec -it <ContainerName> -- cat /log/app.log
+
+InitContainers:
+
+  these are also sidecar containers just like in a multicontainer pod. But they do not run constantly like the multicontainers
+  Init containers are designed to run a particular process and then once the process is complete, they are exited.
+  they may provide a service or run a script that starts a process in the main container and then exits.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: myapp-container
+    image: busybox:1.28
+    command: ['sh', '-c', 'echo The app is running! && sleep 3600']
+  initContainers:
+  - name: init-myservice
+    image: busybox
+    command: ['sh', '-c', 'git clone <some-repository-that-will-be-used-by-application> ;']
+
+CLUSTER MANTAINANCE:
+====================
+This is important to know how and when to upgrade a cluster, how to understand desaster recovery.
+1. OS UPGRADE:
+  To take doen nodes in the cluster for updage or security patches on the node. When a node hosting the pods goes down,
+  all the pods will not be accesible for users. Except there was replicas of that pod on another node.
+  If the node lasts less than 5 minutes, the pods can be reschedulled, but if it exceeds 5 minutes, the controller will  
+  consider it dead. If the pods were part of a ReplicaSet, they are recreated on other nodes depending on the nodeAffinity policies
+
+  A quick update can be done when you are sure it will last less than 5 minutes, and if the pods on that node is part of a ReplicaSet.
+  this will ensure that the application remains accessible.
+  To safely do an upgrade on the nodes, you can drain the node for
+
+  kubectl drain node-1 # --ignore-daemonsets 
+  kubectl cordon node-2  # to make node unschedulable
+  kubectl uncordon node-2 
+
+  The node will be marked as unscedulable and pods will be gracefully termonated and recreated on other nodes.
+  You can ,path the nodes and make them available. You need to maually uncordon the node to make it schedulable.
+
+  After a node is uncordon, it will require that pods are scheduled on it afresh, pods that were evicted durin drain 
+  will not be automatically reschedulled.
+
+  If a pod is not part of a ReplicaSet on a node, k8s internal security will not permit that node to be drained except
+  you manually delete the pod.
+  nevertheless, you can use  --force flag to force delete the pod.This will permenently delete the pod on that node  
+  and will not recreate it on another node because it was not part of a ReplicaSet.
+
+2. Clster Upgrade:
+  Kubernetes is released in version and there are minor version such as the alpha and beta versions before a more stable 
+  release is made.
+  None of the cluster components can be of a version higher than the API Server, except for the kubelete service.
+  You can upgrade component by component.
+  At anytime, k8s supports only the latest three minor versions. It is good to upgrade your cluster before the version is unsupported.
+  You should upgrade only one version higher at a time and not to the latest version if you were not using the previous.
+
+the upgrade depend on how the cluster is setup. between managed and selfmanaged cluster. managed clusters provided by cloud is easier.
+the cluster is being upgraded component by component and while the master node is being upgraded, the kubeapi, controllers,  
+go down briefly. this does not affect the worjer nodes.
+
+To upgrade the worker nodes, if you do all pf them at once, users will not be able to access the app. 
+You can also upgrade one node at a time, which gaurantees your pods are not all down. Or u use new nodes with newer
+software and thenmove all pods.
+
+
+https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/
+
+cat /etc/*release*  # to see the OS the nodes are using
+kubeadm upgrade plan # to all all latest and stable versions
+k drain controlplane --ignore-daemonsets
+apt update
+apt-cache madison kubeadm  # select the kubeadm version
+apt-get upgrade -y kubeadm=1.12.0-00  # it has to be upgraded before the cluster compenents
+
+to upgrade the cluster, use the 
+kubeadm upgrade apply v1.12.0
+
+the next step is to upgrade the kubelete.
+the kubelete service muste be upgraded manually
+
+apt-get upgrade kubelete=v1.12.0-00
+systemctl restart kubelet.service
+
+3. Node Upgrade:
+============
+
+  https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/upgrading-linux-nodes/
+
+  You need to first move all the workloads from the node to other nodes usng the 
+  kubectl drain node01 # this makes the node unschedulable
+  then you run the 
+  apt-get upgrade -y kubeadm=v1.12.0-00
+  apt-get upgrade -y kubelete=1.12.0-00
+  kubeadm upgrade node config --kubelete-version v1.12.0
+  systemctl restart kubelet
+  kubectl uncordon node01
+
+
+  perform thesame steps to upgrade all other worker nodes.
+
+  ssh <nodename>
+
+BACKUP AND RESTORE:
+===================
+With respect to resources, declarative appraches can be used to safe your configuration files. A good praacticce is to safe
+this codes in a source code repo like GitHub. But if an object is created imperatively, it will be difficult to keep track.
+therefore, the KubeAPI server is a place to get all created resources.
+All resources configurations are saved in the kube-apiserver
+
+1. kubectl get all --all-namespaces -o yaml > all-deploy.yaml
+
+there are tools like VELERO that can help in taking backups of the cluster.
+
+The ETCD stores information about the state of the cluster.
+So you can choose to backup the etcd cluster itself. it is found in the controlplane
+data is stored in the data directory.
+it also comes with the builtin snapshot utility
+
+etcdctl snapshot save snapshot.db
+etcdctl snapshot status snapshot.db
+
+
+A snapshot directory is created. To restore the cluster from this backup, stop the kubeapi server and run the  
+
+etcdctl snapshot restore snapshot.db --data-dir /var/lib/etcd-from-backup
+systemctl daemon-reload
+service kube-apiserver start
+
+k logs etcd-controlplane -n kube-system | grep -i 'etcd-version'
+
+
+ls /etc/kubernetes/manifest
+k edit etcd.yaml
+export ETCDCTL_API=3
+
+ETCDCTL_API=3 etcdctl snapshot save --endpoint= \
+--cacert= \
+--cert= \
+--key= \
+/opt/snapshot-pre-boot.db  #location to save backup
+
+to restore the original state of the cluster using the backup file, you can use the etcd restore <filename>
+
+
+etcdctl snapshot restore --data-dir /var/lib/etcd-from-backup /opt/snapshot-pre-boot.db 
+
+ls /var/lib/etcd-from-backup
+
+vi /etc/kubernetes/manifest/etcd.yaml
+
+edit the Hostpath and add /var/etcd-from-backup
+
