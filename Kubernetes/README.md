@@ -423,7 +423,7 @@ eg kubectl create deployment nginx --image nginx
     kubectl set image deployment nginx nginx=nginx:1.18
     kubectl replace -f nginx.yaml
 
-    it creates resources quickly but is difficult to edit or understand what was involved.
+    it creates resources quickly but is difficult to edit or understand what is involved.
 
 - in the Declarative approach, a step-by-step approach through writing configuration files
    Here we can write configuration files 
@@ -458,14 +458,14 @@ there is the last applied file that provides details about the last image of the
 SCHEDULING:
 ============
 
-- there is a builtin scheduler in the cluster controlplane, that scans through nodes in the cluster and schedules
+- there is a builtin scheduler in the cluster control-plane, that scans through nodes in the cluster and schedules
   pods on nodes based on several factors such as resource,
-- But if you want to overide and schedule your pods on specific nodes for some reasons, you can do that by
-  specifying the nodeName in the pod defination file.
-- If a scheduler does not exist in the cluster, the pod will continually be in pending state.
-- If you need a pod to run on a specific node, declare in at the time of creation.
+- But if you want to override and schedule your pods on specific nodes for some reason, you can do that by
+  specifying the nodeName in the pod definition file.
+- If a scheduler does not exist in the cluster, the pod will continually be in a pending state.
+- If you need a pod to run on a specific node, declare it at the time of creation.
 - Kubernetes does not allow node modification after the pod has already been created.
-- It can only be modified by creating a binding object and setting the target to the NodeName and then send a post 
+- It can only be modified by creating a binding object setting the target to the NodeName and then sending a post 
  request to the pod's binding API.
 
 apiVersion: v1
@@ -480,11 +480,11 @@ spec:
 
 RESOURCE REQUIREMENTS:
 =======================
-- ever pod requires a set of resources to run.
-when a podd is plcaed on a node, it consumes the resources on that node.
+- every pod requires a set of resources to run.
+when a podd is placed on a node, it consumes the resources on that node.
 the scheduler determines the node a pod will be scheduled on based on resource availability.
-if nodes have insfficient resrources, the scheduler keeps the pod in pending state.
-- you can specify the resource requested by  a pod to run.
+if nodes have insufficient resources, the scheduler keeps the pod in a pending state.
+- You can specify the resource requested by  a pod to run.
 the scheduler will look for a node that has that resource specification and place that pod on it.
 apiVersion: v1
 kind: Pod
@@ -503,28 +503,28 @@ spec:
         cpu: 
   nodeName: controlplane
 
-- when a pod tried to exceed reouces out of it limits, the system throttles the containers so that it doesnt
-  use more than it limit,
-- as for memory, a container can use more memory resources than its limit. but a pod ccan not
-- By default, k8s does not have request and limit set, therefore resources can consume as much as they need.
-- One pod can consume more and prevent other from running.
-- When a cpu limit is set without request, k8s sets request to thesame as limit
-- When cpu request and limits are set, then they stay within the range. But if one pod isnt sonsuming resources,
+- When a pod tries to exceed resources out of its limits, the system throttles the containers so that it doesn't
+  use more than its limit,
+- as for memory, a container can use more memory resources than its limit. but a pod cannot
+- By default, k8s does not have a request and limit set, therefore resources can consume as much as they need.
+- One pod can consume more and prevent others from running.
+- When a cpu limit is set without request, k8s set request to the same as limit
+- When cpu requests and limits are set, then they stay within the range. But if one pod isn't consuming resources,
   then it is securing resources that other pods could use.
-- When request are set without limits, any pods can consume as mamny cpus are required and when a pod needs more  
-  resources, it has a gauranteed resource but without a limit. Make sure all pods have requests set.
+- When requests are set without limits, any pods can consume as many cpus are required and when a pod needs more  
+  resources, it has a guaranteed resource but without a limit. Make sure all pods have requests set.
 
 LimitRanges as objects can be used to ensure that every pod created has some default values at the namespace level.
 You can set it for both cpu and memory at the ns level. all pods will assume that standard.
-ResourceQuota can also be sued to set resource limits at the level of the NameSpace.
+ResourceQuota can also be used to set resource limits at the level of the NameSpace.
 
 DEAMONSETS:
 
-Deamonsets are like replicasets which helps you run one instance of pods, but it runs one copy of your pod on every  
+Deamonsets are like replicasets which help you run one instance of pods, but it runs one copy of your pod on every  
 node on the cluster.
-the deamonset ensures that one copy of the pod is alway runniing on every node in the cluster.
-A use case is that if you are deploying a log collecting or moniroting agent .
-objevts like the kube-proxy and network uses deamonsets because they have to run on every node.
+the deamonset ensures that one copy of the pod is always running on every node in the cluster.
+A use case is if you are deploying a log collecting or monitoring agent.
+objects like the kube-proxy and network use deamonsets because they have to run on every node.
 
 apiVersion: apps/v1
 kind: Deamonset
@@ -548,31 +548,31 @@ kubectl describe deamonsets
 kubectl get daemonsets --all-namespaces 
 
 - How do you get pods to be scheduled on every node?
-- one approach is to use the nodename to bypass the scheduler and place a pod on a desired node.
+- one approach is to use the node name to bypass the scheduler and place a pod on a desired node.
 - 
 
 STATIC PODS:
 ============
 - Without the controlplane which contains the api server, you can store your configuration files at the path 
   /etc/kubernetes/manifest,.
-- kubernetes frequently visits this directory and any manifest file here to create pods will creat the pod.
-- it can create only pods, other object will need the controlplane
-- the static pod folder can be any directory, but the path set in the kubelet.service file in the kubeconfig.yaml
-- static pods can be viewed by running the docker ps command.
-- The kubelet can create resources in k8s either by using confguration files or by listening the kube API endpoints
+- kubernetes frequently visit this directory and any manifest file here to create pods will create the pod.
+- it can create only pods, another object will need the controlplane
+- The static pod folder can be any directory, but the path is set in the kubelet.service file in the kubeconfig.yaml
+- Static pods can be viewed by running the docker ps command.
+- The kubelet can create resources in k8s either by using configuration files or by listening to the kube API endpoints
   from the control controlplane.
-- If you run the k get pods comand, it will also list the static pods. this is blc a mirror of the static pods are  
-- created in the kubeapi but like other pods, can not be edited, except in the pod defination files.
-- A use case for static pods is when you want to install componenst pf the k8s controlplane on every node, the you start 
-  by installing the kubelet service and then create pod defination files that uses docker images of all other 
+- If you run the k get pods command, it will also list the static pods. This is blc a mirror of the static pods that are  
+- created in the kubeapi but like other pods, can not be edited, except in the pod definition files.
+- A use case for static pods is when you want to install components of the k8s control plane on every node, then you start 
+  by installing the kubelet service and then create pod definition files that use docker images of all other 
   components of the controlplane and place them in the etc/kubernetes/manifest dir
 
 kubectl get pods -n kube-system
 
 Multiple Schedulers:
 ====================
-You can deploy an optional scheduler added to thecustom schedueler and configure it to schedule specific pods.
-you can use a pod defination file or wget the scheduler binary and remane the scheduler to a different name.
+You can deploy an optional scheduler added to the custom scheduler and configure it to schedule specific pods.
+you can use a pod definition file or wget the scheduler binary and remane the scheduler to a different name.
 to make sure that your object to be created is managed by that scheduler, you can add a scheduler option under
 spec section and pass the name of the scheduler.
 
@@ -585,15 +585,15 @@ binding         ===> Defaultbinding
 
 LOGGING AND MONITORING:
 =======================
-We can monitor the applications deployed in k8s as well as the kubernetes cluster.
+We can monitor the applications deployed in k8s as well as the Kubernetes cluster.
 to monitor resources in the cluster, we can monitor
-- node level metrics  #number of nodes, healthy, memory peformance, cpu utilization
-- pod level metric # number of pods and their cpu utilization
+- node level metrics  #number of nodes, healthy, memory performance, cpu utilization
+- pod level metric # number of pods and their CPU utilization
 
-Kubernetes by default doesnot come with any monitoring agent but metric servers can be used and other resources  
-such as prometheus.
-- You can have one metric server per cluster, the metric server retrives metrics from pods and nodes  
- and stores them in memory. It does not store the metric in the disk and so you can not store see historical metric.
+Kubernetes by default does not come with any monitoring agent but metric servers can be used and other resources  
+such as Prometheus.
+- You can have one metric server per cluster, the metric server retrieves metrics from pods and nodes  
+ and stores them in memory. It does not store the metric in the disk so you can not store see historical metric.
 
 You can clone the metric server from the github repo and run it. 
 cluster performance can be seen by running  
@@ -602,37 +602,38 @@ kubectl top node
 kubectl top pods
 
 managing application logs: 
-  when you run a container in a pod, you can stream the logs by running the  
+  When you run a container in a pod, you can stream the logs by running the  
    kubectl logs -f <podname>
-in the case of a multicontainer pods, you need to specify the name of the container individually.
+in the case of multicontainer pods, you need to specify the name of the container individually.
 
 APPLICATION LIFECYCLE MANAGEMENT:
 =================================
-1. Rolling Update and rollback:
-  when you first create a deployment, it trigger s a rollout which can be rev 1
+##1. Rolling Update and rollback:
+  when you first create a deployment, it triggers a rollout which can be rev 1
   later when the image is updated, a new rollout is made called rev2
   to see the status of the rollout, run the  
   kubectl rollout status deployment/<deploymentname>
 
-  to see the revision and the rollout hostory, run the
+  to see the revision and the rollout history, run the
    kubectl rollout history deployment/myapp-deployment
 
-there are two type of deployment strategies.
+there are two types of deployment strategies.
 
--RECREATE:
-- you can delete existing deployment and then make a new deployment with the newer version
-- this will lead to app downtime. this is not the k8s default strategy.
-- ROLLINGUPDATE:
+##2. ECREATE:
+- You can delete the existing deployment and then make a new deployment with the newer version
+- This will lead to app downtime. this is not the k8s default strategy.
+  
+##3. ROLLING UPDATE:
 - Here, pods replicas are progressively destroyed and replaced with newer pods to ensure there is no downtime 
-- this is the k8s default update strategy.
+- This is the k8s default update strategy.
 
-update can be done by changing the version ofthe image, replicas  
+update can be done by changing the version of the image, replicas  
 kubectl apply -f <filename>
 
-it is advisable to manually edit the defination file than using imperative approach because with an Imperative,
-changes will not be saved in the defination file.
+it is advisable to manually edit the definition file than using the imperative approach because with an Imperative,
+changes will not be saved in the definition file.
 
-to rollback run the kubectl rolout undo deployment/myapp-deployment
+to rollback run the kubectl rollout undo deployment/myapp-deployment
 
 kubectl apply -f deployment
 kubectl get deployment
@@ -642,11 +643,11 @@ kubectl rollout undo deployment/app
 
 ConfigMaps:
 ===========
-this is a way of managing environmantal variables in k8s. you can manually inject these variable by passing them  
-as env. But with many def file that requires these variable, then you need to create then as a seprate object in k8s 
-and simply reference then in your object defination file. Thes can be done using ConfigMaps and Secrets.
+this is a way of managing environmental variables in k8s. you can manually inject this variable by passing them  
+as env. But with many def files that requires this variable, then you need to create them as a separate object in k8s 
+and simply reference them in your object definition file. This can be done using ConfigMaps and Secrets.
 
-ConfigMaps are used to pass configuration data in the form of key value pairs in k8s and then injected into pods.
+ConfigMaps are used to pass configuration data in the form of key-value pairs in k8s and then injected into pods.
 
 kubectl create configmap <ConfigName> --from-literal=APP_COLOR=blue \
                                    --from-literal=APP_MODE=prod  
@@ -667,7 +668,7 @@ data:
 kubectl get configmaps
 
 
-to inject the  env to the runnig container, add the envFrom section under the spec section  
+to inject the  env to the running container, add the envFrom section under the spec section  
 
 apiVersion: v1
 kind: Pod
@@ -704,8 +705,8 @@ volumes:
 SECRETS:
 ========
 Secrets just like configmaps are used to store configuration data which can be injected into an object in k8s.
-Unlike configmaps, secrets stores sensitive data such as passwords and keys in an encoded manner.
-You can creatae a secret imperatively by using:
+Unlike configmaps, secrets store sensitive data such as passwords and keys in an encoded manner.
+You can create a secret imperatively by using:
   kubectl create secret generic <secretName> app-secret --from-literal=DB_Host=mysql   \
                                                         --from-literal=DB_User=root
 
@@ -721,8 +722,8 @@ data:
   DB_User: root 
   DB_Password: password
 
-It is however not advisable to pass your secrets in plan text as if fdefeats the entire purpose.
-To convert the data from plaintext to an encoded format, on a linux system, use the  
+It is however not advisable to pass your secrets in plain text as if defeats the entire purpose.
+To convert the data from plaintext to an encoded format, on a Linux system, use the  
  
 echo -n 'mysql' | base64
 echo -n 'root' | base64
@@ -738,7 +739,7 @@ data:
   DB_User: fnvjsf== 
   DB_Password: sffvnhri
 
-copy the corresponding encoded values and replace inject them into the file.
+copy the corresponding encoded values and replace and inject them into the file.
 
 kubectl get secrets app-secret
 kubectl describe secrets
@@ -764,21 +765,21 @@ spec:
       - secretRef:
         name: app-secret
 
-Secrets are not encypted but rather encoded and can be decoded using thesame method. Therefore, do not upload your
+Secrets are not encrypted but rather encoded and can be decoded using the same method. Therefore, do not upload your
 secret files to the github repo.
 
-You can enable encrption atrest:
+You can enable encryption at rest:
 kubectl get secrets --all-namespaces -o jason | kubectl replace -f -
 
 https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
 
 Multi Container PODS:
 =====================
-the idea of decoupling a large mom=nolithic application into a small components called microservices,
-allows us to deploy a set of small independent ans reusable code. This set up allows us to manage, or update only,
-small portions of the app instead of the entire app. It might require that running two app or components in thesame  
-container. An example is a web server and a log agent deployed in thesame container. They sahre thesame lifecycle,
-they are created and destroyes together, they sahre thesame network, and thesame volume resources.
+the idea of decoupling a large mom=nolithic application into small components called microservices,
+allows us to deploy a set of small independent and reusable code. This setup allows us to manage, or update only,
+small portions of the app instead of the entire app. It might require running two apps or components in the same  
+container. An example is a web server and a log agent deployed in the same container. They share the same lifecycle,
+they are created and destroyed together, and they share the same network and the same volume of resources.
 apiVersion: v1
 kind: Pod
 metadata:
@@ -820,16 +821,16 @@ spec:
     image: busybox
     command: ['sh', '-c', 'git clone <some-repository-that-will-be-used-by-application> ;']
 
-CLUSTER MANTAINANCE:
+CLUSTER MAINTENANCE:
 ====================
-This is important to know how and when to upgrade a cluster, how to understand desaster recovery.
+This is important to know how and when to upgrade a cluster, and how to understand disaster recovery.
 1. OS UPGRADE:
-  To take doen nodes in the cluster for updage or security patches on the node. When a node hosting the pods goes down,
-  all the pods will not be accesible for users. Except there was replicas of that pod on another node.
-  If the node lasts less than 5 minutes, the pods can be reschedulled, but if it exceeds 5 minutes, the controller will  
+  To take down nodes in the cluster for updates or security patches on the node. When a node hosting the pods goes down,
+  all the pods will not be accessible to users. Except there were replicas of that pod on another node.
+  If the node lasts less than 5 minutes, the pods can be rescheduled, but if it exceeds 5 minutes, the controller will  
   consider it dead. If the pods were part of a ReplicaSet, they are recreated on other nodes depending on the nodeAffinity policies
 
-  A quick update can be done when you are sure it will last less than 5 minutes, and if the pods on that node is part of a ReplicaSet.
+  A quick update can be done when you are sure it will last less than 5 minutes, and if the pods on that node are part of a ReplicaSet.
   this will ensure that the application remains accessible.
   To safely do an upgrade on the nodes, you can drain the node for
 
@@ -837,42 +838,42 @@ This is important to know how and when to upgrade a cluster, how to understand d
   kubectl cordon node-2  # to make node unschedulable
   kubectl uncordon node-2 
 
-  The node will be marked as unscedulable and pods will be gracefully termonated and recreated on other nodes.
-  You can ,path the nodes and make them available. You need to maually uncordon the node to make it schedulable.
+  The node will be marked as unschedulable and pods will be gracefully terminated and recreated on other nodes.
+  You can, path the nodes and make them available. You need to manually uncordon the node to make it schedulable.
 
-  After a node is uncordon, it will require that pods are scheduled on it afresh, pods that were evicted durin drain 
-  will not be automatically reschedulled.
+  After a node is uncordon, it will require that pods are scheduled on it afresh, pods that were evicted during the drain 
+  will not be automatically rescheduled.
 
-  If a pod is not part of a ReplicaSet on a node, k8s internal security will not permit that node to be drained except
+  If a pod is not part of a ReplicaSet on a node, k8s internal security will not permit that node to be drained unless
   you manually delete the pod.
-  nevertheless, you can use  --force flag to force delete the pod.This will permenently delete the pod on that node  
+  nevertheless, you can use  --force flag to force delete the pod. This will permanently delete the pod on that node  
   and will not recreate it on another node because it was not part of a ReplicaSet.
 
 2. Clster Upgrade:
-  Kubernetes is released in version and there are minor version such as the alpha and beta versions before a more stable 
+  Kubernetes is released in version and there are minor versions such as the alpha and beta versions before a more stable 
   release is made.
   None of the cluster components can be of a version higher than the API Server, except for the kubelete service.
   You can upgrade component by component.
-  At anytime, k8s supports only the latest three minor versions. It is good to upgrade your cluster before the version is unsupported.
-  You should upgrade only one version higher at a time and not to the latest version if you were not using the previous.
+  At any time, k8s supports only the latest three minor versions. It is good to upgrade your cluster before the version is unsupported.
+  You should upgrade only one version higher at a time and not to the latest version if you were not using the previous one.
 
-the upgrade depend on how the cluster is setup. between managed and selfmanaged cluster. managed clusters provided by cloud is easier.
-the cluster is being upgraded component by component and while the master node is being upgraded, the kubeapi, controllers,  
+the upgrade depends on how the cluster is set up. between managed and self-managed clusters. managed clusters provided by the cloud is easier.
+the cluster is being upgraded component by component and while the master node is being upgraded, the Kube API, and controllers,  
 go down briefly. this does not affect the worjer nodes.
 
-To upgrade the worker nodes, if you do all pf them at once, users will not be able to access the app. 
-You can also upgrade one node at a time, which gaurantees your pods are not all down. Or u use new nodes with newer
-software and thenmove all pods.
+To upgrade the worker nodes, if you do all of them at once, users will not be able to access the app. 
+You can also upgrade one node at a time, which guarantees your pods are not all down. Or u use new nodes with newer
+software and then move all pods?
 
 
 https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/
 
 cat /etc/*release*  # to see the OS the nodes are using
-kubeadm upgrade plan # to all all latest and stable versions
+kubeadm upgrade plan # to all the latest and stable versions
 k drain controlplane --ignore-daemonsets
 apt update
 apt-cache madison kubeadm  # select the kubeadm version
-apt-get upgrade -y kubeadm=1.12.0-00  # it has to be upgraded before the cluster compenents
+apt-get upgrade -y kubeadm=1.12.0-00  # It has to be upgraded before the cluster components
 
 to upgrade the cluster, use the 
 kubeadm upgrade apply v1.12.0
@@ -888,8 +889,8 @@ systemctl restart kubelet.service
 
   https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/upgrading-linux-nodes/
 
-  You need to first move all the workloads from the node to other nodes usng the 
-  kubectl drain node01 # this makes the node unschedulable
+  You need to first move all the workloads from the node to other nodes using the 
+  kubectl drain node01 # This makes the node unschedulable
   then you run the 
   apt-get upgrade -y kubeadm=v1.12.0-00
   apt-get upgrade -y kubelete=1.12.0-00
@@ -904,10 +905,10 @@ systemctl restart kubelet.service
 
 BACKUP AND RESTORE:
 ===================
-With respect to resources, declarative appraches can be used to safe your configuration files. A good praacticce is to safe
-this codes in a source code repo like GitHub. But if an object is created imperatively, it will be difficult to keep track.
+With respect to resources, declarative approaches can be used to save your configuration files. A good practice is to safe
+these codes in a source code repo like GitHub. But if an object is created imperatively, it will be difficult to keep track.
 therefore, the KubeAPI server is a place to get all created resources.
-All resources configurations are saved in the kube-apiserver
+All resource configurations are saved in the kube-apiserver
 
 1. kubectl get all --all-namespaces -o yaml > all-deploy.yaml
 
