@@ -414,9 +414,7 @@ spec:
 
 kubectl apply -f <filename>
 
-
-
-Declarative and Imperative :
+### Declarative and Imperative :
   these are different approaches to creating and managing infrastructure in IaC.
 - The Imperative approach is giving just the required infrastructure and the resource figures out the steps involved.
 eg kubectl create deployment nginx --image nginx
@@ -445,9 +443,7 @@ kubectl create service clusterip redis --tcp=6379:6379 --dry-run=client -o yaml
 kubectl expose pod nginx --type=NodePort --port=80 --name=nginx-service --dry-run=client -o yaml
 k create deploy redis-deploy --image=redis --replicas=2 --namespace=dev-ns
 
-
 kubectl run httpd --image=httpd:alpine --port=80 --expose   #will create pod and service
-
 
 when you run a kubectl apply command, if the object stated in the file does not exist, it is created.
 another live object configuration is created with additional fields and can be viewed using the  
@@ -467,7 +463,7 @@ SCHEDULING:
 - Kubernetes does not allow node modification after the pod has already been created.
 - It can only be modified by creating a binding object setting the target to the NodeName and then sending a post 
  request to the pod's binding API.
-
+```sh
 apiVersion: v1
 kind: Pod
 metadata:
@@ -477,7 +473,7 @@ spec:
   -  image: nginx
      name: nginx
   nodeName: controlplane
-
+```
 RESOURCE REQUIREMENTS:
 =======================
 - every pod requires a set of resources to run.
@@ -486,6 +482,7 @@ the scheduler determines the node a pod will be scheduled on based on resource a
 if nodes have insufficient resources, the scheduler keeps the pod in a pending state.
 - You can specify the resource requested by  a pod to run.
 the scheduler will look for a node that has that resource specification and place that pod on it.
+```sh
 apiVersion: v1
 kind: Pod
 metadata:
@@ -502,6 +499,7 @@ spec:
         memory: 
         cpu: 
   nodeName: controlplane
+```
 
 - When a pod tries to exceed resources out of its limits, the system throttles the containers so that it doesn't
   use more than its limit,
@@ -518,14 +516,14 @@ LimitRanges as objects can be used to ensure that every pod created has some def
 You can set it for both cpu and memory at the ns level. all pods will assume that standard.
 ResourceQuota can also be used to set resource limits at the level of the NameSpace.
 
-DEAMONSETS:
+## DEAMONSETS:
 
 Deamonsets are like replicasets which help you run one instance of pods, but it runs one copy of your pod on every  
 node on the cluster.
 the deamonset ensures that one copy of the pod is always running on every node in the cluster.
 A use case is if you are deploying a log collecting or monitoring agent.
 objects like the kube-proxy and network use deamonsets because they have to run on every node.
-
+```sh
 apiVersion: apps/v1
 kind: Deamonset
 metadata:
@@ -542,14 +540,16 @@ spec:
       containers:
       - image: monitoring-agent
         name: monitoring-agent
+```
+```sh
 k create -f <filename>
 kubectl get deamonsets 
 kubectl describe deamonsets
 kubectl get daemonsets --all-namespaces 
-
+```
 - How do you get pods to be scheduled on every node?
 - one approach is to use the node name to bypass the scheduler and place a pod on a desired node.
-- 
+
 
 STATIC PODS:
 ============
@@ -619,11 +619,11 @@ APPLICATION LIFECYCLE MANAGEMENT:
 
 there are two types of deployment strategies.
 
-##2. ECREATE:
+## 2. ECREATE:
 - You can delete the existing deployment and then make a new deployment with the newer version
 - This will lead to app downtime. this is not the k8s default strategy.
   
-##3. ROLLING UPDATE:
+## 3. ROLLING UPDATE:
 - Here, pods replicas are progressively destroyed and replaced with newer pods to ensure there is no downtime 
 - This is the k8s default update strategy.
 
@@ -634,13 +634,13 @@ it is advisable to manually edit the definition file than using the imperative a
 changes will not be saved in the definition file.
 
 to rollback run the kubectl rollout undo deployment/myapp-deployment
-
+```sh
 kubectl apply -f deployment
 kubectl get deployment
 kubectl rollout status deployment/myapp-deployment
 kubectl rollout history deployment/myapp-deployment
 kubectl rollout undo deployment/app 
-
+```
 ConfigMaps:
 ===========
 this is a way of managing environmental variables in k8s. you can manually inject this variable by passing them  
@@ -648,12 +648,13 @@ as env. But with many def files that requires this variable, then you need to cr
 and simply reference them in your object definition file. This can be done using ConfigMaps and Secrets.
 
 ConfigMaps are used to pass configuration data in the form of key-value pairs in k8s and then injected into pods.
-
+```sh
 kubectl create configmap <ConfigName> --from-literal=APP_COLOR=blue \
                                    --from-literal=APP_MODE=prod  
                    OR 
 kubectl create configmap app-config --from-file=<pathtofile>
-
+```
+```sh
 APP_COLOR: blue 
 APP_MODE: prod
 
@@ -664,12 +665,12 @@ metadata:
 data:
   APP_COLOR: blue 
   APP_MODE: prod
-
+```
 kubectl get configmaps
 
 
 to inject the  env to the running container, add the envFrom section under the spec section  
-
+```sh
 apiVersion: v1
 kind: Pod
 metadata:
@@ -683,7 +684,7 @@ spec:
     envFrom:
       - configMapRef:
         name: app-config
-
+```
 to create resource, use kubectl create -f <filename>
 
 You can also ref a single env from a configmap 
@@ -711,8 +712,8 @@ You can create a secret imperatively by using:
                                                         --from-literal=DB_User=root
 
     You can ref the secret from a file using the --from-file=app-secret
-    For a declerative approach
-
+    For a declarative approach
+```sh
 apiVersion: v1
 kind: Secret
 metadata:
@@ -721,7 +722,7 @@ data:
   DB_Host: mysql
   DB_User: root 
   DB_Password: password
-
+```
 It is however not advisable to pass your secrets in plain text as if defeats the entire purpose.
 To convert the data from plaintext to an encoded format, on a Linux system, use the  
  
@@ -729,7 +730,7 @@ echo -n 'mysql' | base64
 echo -n 'root' | base64
 echo -n 'password' | base64
 
-
+```sh
 apiVersion: v1
 kind: Secret
 metadata:
@@ -738,7 +739,7 @@ data:
   DB_Host: sjhdvdv=
   DB_User: fnvjsf== 
   DB_Password: sffvnhri
-
+```
 copy the corresponding encoded values and replace and inject them into the file.
 
 kubectl get secrets app-secret
@@ -750,7 +751,7 @@ to decode encoded values use the
 echo -n 'djvfjdo=' | base64 --decode
 
 to inject encoded values into the pod object, use the 
-
+```sh
 apiVersion: v1
 kind: Pod
 metadata:
@@ -764,7 +765,7 @@ spec:
     envFrom:
       - secretRef:
         name: app-secret
-
+```
 Secrets are not encrypted but rather encoded and can be decoded using the same method. Therefore, do not upload your
 secret files to the github repo.
 
@@ -780,6 +781,7 @@ allows us to deploy a set of small independent and reusable code. This setup all
 small portions of the app instead of the entire app. It might require running two apps or components in the same  
 container. An example is a web server and a log agent deployed in the same container. They share the same lifecycle,
 they are created and destroyed together, and they share the same network and the same volume of resources.
+```sh
 apiVersion: v1
 kind: Pod
 metadata:
@@ -794,17 +796,18 @@ spec:
       - containerPort: 8080
   - image: log-agent     #container2
     name: log-agent
-
+```
 https://kubernetes.io/docs/tasks/access-application-cluster/communicate-containers-same-pod-shared-volume/
     
 to exec into a container in kubernetes, run the 
 kubectl -n <Namespace> exec -it <ContainerName> -- cat /log/app.log
 
-InitContainers:
+### InitContainers:
 
-  these are also sidecar containers just like in a multicontainer pod. But they do not run constantly like the multicontainers
+  these are also sidecar containers just like in a multicontainer pod. But they do not run constantly like the multi containers
   Init containers are designed to run a particular process and then once the process is complete, they are exited.
   they may provide a service or run a script that starts a process in the main container and then exits.
+```sh
 apiVersion: v1
 kind: Pod
 metadata:
@@ -820,11 +823,11 @@ spec:
   - name: init-myservice
     image: busybox
     command: ['sh', '-c', 'git clone <some-repository-that-will-be-used-by-application> ;']
-
+```
 CLUSTER MAINTENANCE:
 ====================
 This is important to know how and when to upgrade a cluster, and how to understand disaster recovery.
-1. OS UPGRADE:
+### 1. OS UPGRADE:
   To take down nodes in the cluster for updates or security patches on the node. When a node hosting the pods goes down,
   all the pods will not be accessible to users. Except there were replicas of that pod on another node.
   If the node lasts less than 5 minutes, the pods can be rescheduled, but if it exceeds 5 minutes, the controller will  
@@ -833,11 +836,11 @@ This is important to know how and when to upgrade a cluster, and how to understa
   A quick update can be done when you are sure it will last less than 5 minutes, and if the pods on that node are part of a ReplicaSet.
   this will ensure that the application remains accessible.
   To safely do an upgrade on the nodes, you can drain the node for
-
+```sh
   kubectl drain node-1 # --ignore-daemonsets 
   kubectl cordon node-2  # to make node unschedulable
   kubectl uncordon node-2 
-
+```
   The node will be marked as unschedulable and pods will be gracefully terminated and recreated on other nodes.
   You can, path the nodes and make them available. You need to manually uncordon the node to make it schedulable.
 
@@ -849,7 +852,7 @@ This is important to know how and when to upgrade a cluster, and how to understa
   nevertheless, you can use  --force flag to force delete the pod. This will permanently delete the pod on that node  
   and will not recreate it on another node because it was not part of a ReplicaSet.
 
-2. Clster Upgrade:
+### 2. Cluster Upgrade:
   Kubernetes is released in version and there are minor versions such as the alpha and beta versions before a more stable 
   release is made.
   None of the cluster components can be of a version higher than the API Server, except for the kubelete service.
@@ -867,14 +870,14 @@ software and then move all pods?
 
 
 https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/
-
+```sh
 cat /etc/*release*  # to see the OS the nodes are using
 kubeadm upgrade plan # to all the latest and stable versions
 k drain controlplane --ignore-daemonsets
 apt update
 apt-cache madison kubeadm  # select the kubeadm version
 apt-get upgrade -y kubeadm=1.12.0-00  # It has to be upgraded before the cluster components
-
+```
 to upgrade the cluster, use the 
 kubeadm upgrade apply v1.12.0
 
@@ -884,8 +887,8 @@ the kubelete service muste be upgraded manually
 apt-get upgrade kubelete=v1.12.0-00
 systemctl restart kubelet.service
 
-3. Node Upgrade:
-============
+### 3. Node Upgrade:
+        ============
 
   https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/upgrading-linux-nodes/
 
