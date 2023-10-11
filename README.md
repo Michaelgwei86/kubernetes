@@ -1,9 +1,10 @@
 How to Provision VM for a Kubernetes Cluster with 1Master $ 2Worker Nodes:
 ==========================================================================
-1. Prerequisite: VirtualBox and Vagrant
-Select the appropriate version of
+## 1. Prerequisite: VirtualBox and Vagrant
+Select the appropriate OS
+``sh
 https://download.virtualbox.org/virtualbox/7.0.10/VirtualBox-7.0.10-158379-Win.exe
-
+```
 Follow the link to install Vagrant:
 https://developer.hashicorp.com/vagrant/tutorials/getting-started/getting-started-install
 
