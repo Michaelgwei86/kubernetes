@@ -14,11 +14,11 @@ You can use an already configured vagrant from;
 git clone https://github.com/kodekloudhub/certified-kubernetes-administrator-course.git
 ```
 cd dir
-vagrant status
-vagrant up
-vagrant status
-ssh into all the nodes
-vagrant ssh kubemaster
+- vagrant status
+- vagrant up
+- vagrant status
+- ssh into all the nodes
+- vagrant ssh kubemaster
 
 ## Install kubeadm Doc:
 ```ss
@@ -93,9 +93,9 @@ delete all file content and paste the following:
 sudo systemctl restart containerd 
 ```
 ## Installing kubeadm, kubelet and kubectl:
-kubeadm: the command to bootstrap the cluster.
-kubelet: the component that runs on all of the machines in your cluster and does things like starting pods and containers.
-kubectl: the command line util to talk to your cluster.
+- kubeadm: the command to bootstrap the cluster.
+- kubelet: the component that runs on all of the machines in your cluster and does things like starting pods and containers.
+- kubectl: the command line util to talk to your cluster.
 
 Select Debian based Distributions;
 Follow the steps and run on all nodes
