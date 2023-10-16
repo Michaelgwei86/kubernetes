@@ -133,7 +133,7 @@ sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address
   https://kubernetes.io/docs/concepts/cluster-administration/addons/
 ```
 Select weave network  
-Run this command on all nodes:
+Run this command on the controlplane:
 ```sh
 kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
 ```
