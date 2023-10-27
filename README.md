@@ -85,7 +85,7 @@ run the command on all nodes:
   sudo apt install containerd.io
   systemctl status containerd
 ```
-check you init system:
+check your init system:
 ```sh
   ps -p 1
 ```
