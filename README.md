@@ -160,6 +160,10 @@ Run this on all worker nodes
  sudo kubeadm join 192.168.56.2:6443 --token 18314j.ny40ysss2jnjgz0u \ 
         --discovery-token-ca-cert-hash sha256:5395b66c9b96156ecda4f35caa8f08e7447e6432f77428fbe0202893e502e61f
 ```
+```sh
+source <(kubectl completion bash) # set up autocomplete in bash into the current shell, bash-completion package should be installed first.
+echo "source <(kubectl completion bash)" >> ~/.bashrc # add autocomplete permanently to your bash shell.
+```
 kubectl get nodes
 kubectl get pods -A 
 kubectl get pods -n kube-system
