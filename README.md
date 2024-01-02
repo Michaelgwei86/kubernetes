@@ -103,6 +103,11 @@ delete all file content and paste the following:
     SystemdCgroup = true  
 ```
 ```sh
+echo '[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+    SystemdCgroup = true' | sudo tee /etc/containerd/config.toml
+```
+```sh
 sudo systemctl restart containerd 
 ```
 ## Installing kubeadm, kubelet and kubectl:
