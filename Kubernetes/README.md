@@ -684,8 +684,47 @@ You can enable encryption at rest:
 kubectl get secrets --all-namespaces -o jason | kubectl replace -f -
 ```
 https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
-
-
+## PersistentVolume (PV)
++ A PersistentVolume (PV) is a piece of storage in the cluster that has been provisioned by an administrator
++ PVs are volume plugins like Volumes, but have a lifecycle independent of any individual Pod that uses the PV
+```sh
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: task-pv-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+```
+## PersistentVolumeClaim (PVC)
++ A PersistentVolumeClaim (PVC) is a request for storage by a user. 
++ Pods consume node resources and PVCs consume PV resources.
++ While Pods can request specific levels of resources (CPU and Memory), Claims can request specific size and access modes (e.g., they can be mounted ReadWriteOnce, ReadOnlyMany, ReadWriteMany, or ReadWriteOncePod,)
+```sh
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: task-pv-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+```
+## Volume Lifecycle:
+The reclaim policy for a PersistentVolume tells the cluster what to do with the volume after it has been released of its claim
++ Recycle
++ Reclaim
++ Delete
 # NAMESPACES:
 
   A namespace is simply a distinct working area in k8s where a defined set of resources rules and users can  
