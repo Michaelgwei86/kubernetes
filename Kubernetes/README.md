@@ -126,6 +126,7 @@ spec:
 
 # POD AND CONTROLLERS:
 ## REPLICASETS:
+A ReplicaSet maintains a stable set of replica Pods running at any given time. As such, it is often used to guarantee the availability of a specified number of identical Pods
 Controllers are the brain behind k8s, they monitor k8s objects and respond accordingly.
 - the replication controller helps increase the number of pods in the node for high availability.
 - It also serves as recreating a pod if it fails.
@@ -158,7 +159,7 @@ spec:
 - kubectl get rc 
 ```
 #replicasets requires a selector field | it is not a must
-#It helps the replica set defines what pods fall under it although pod spec has already been mentioned in the spec
+#It helps the replica set define what pods fall under it although pod spec has already been mentioned in the spec
 #This is because it can manage pods that were not created to be managed by the rs
 ```sh
 apiVersion: apps/v1
@@ -182,19 +183,7 @@ spec:
 k get rs 
 k get pods 
 ```
-## Labels and Selectors:
-+ Labels are used as filters for ReplicaSet. Labels allow the rs to know what pod in the cluster or nodes 
-placed under its management since there could be multiple pods running in the cluster.
-+ The template definition section is required in every rs, even for pods that were created before the rs 
-+ This is due to the fact that if the pod fails and is to be recreated, it will need the spec to recreate it
 
-- if you want to scale from 3 to 6 replicas, update the replicas to 6 and run
-```sh
- kubectl replace -f <filename>
- kubectl scale --replicas=6 <filename>
- kubectl scale -- replicas replicaset name 
- kubectl edit pod/rs/rc/deploy <podname>
-```
 ## Deployments
 
 + When you want to deploy an application, you may want to deploy several pods of that application for high 
@@ -234,6 +223,20 @@ kubectl get deployment
 kubectl create deployment --image=nginx nginx --dry-run=client -o yaml
 kubectl create deployment --image=nginx nginx --dry-run=client -o yaml > nginx-deployment.yaml
 kubectl create deployment --image=nginx nginx --replicas=4 --dry-run=client -o yaml > nginx-deployment.yaml
+```
+
+## Labels and Selectors:
++ Labels are used as filters for ReplicaSet. Labels allow the rs to know what pod in the cluster or nodes 
+placed under its management since there could be multiple pods running in the cluster.
++ The template definition section is required in every rs, even for pods that were created before the rs 
++ This is due to the fact that if the pod fails and is to be recreated, it will need the spec to recreate it
+
+- if you want to scale from 3 to 6 replicas, update the replicas to 6 and run
+```sh
+ kubectl replace -f <filename>
+ kubectl scale --replicas=6 <filename>
+ kubectl scale -- replicas replicaset name 
+ kubectl edit pod/rs/rc/deploy <podname>
 ```
 
 ## Services
