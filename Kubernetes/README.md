@@ -485,6 +485,205 @@ spec:
 ```
 
 # STORAGE:
+## VOLUMES:
+Files in a container are ephemeral and they will be lost once the container fails or is stopped
+The container is recreated in a clean state and all volumes I lost
++ Therefore persisting volumes are essential in k8s as they persistent volumes exist beyond the lifetime of a pod.
++ These persistent volumes can be a directory that can be used by Pods or shared by containers running in a Pod
+
+## Types of volumes:
+ConfigMaps:
+===========
++ A ConfigMap provides a way to inject configuration data into pods.
++ This is a way of managing environmental variables in k8s. you can manually inject this variable by passing them as env.
++ But with many def files that require this variable, then you need to create them as a separate object in k8s 
+and simply reference them in your object definition file. This can be done using ConfigMaps and Secrets.
+
+ConfigMaps are used to pass configuration data in the form of key-value pairs in k8s and then injected into pods.
+```sh
+kubectl create configmap <ConfigName> --from-literal=APP_COLOR=blue \
+                                   --from-literal=APP_MODE=prod  
+                   OR 
+kubectl create configmap app-config --from-file=<pathtofile>
+```
+```sh
+APP_COLOR: blue 
+APP_MODE: prod
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  APP_COLOR: blue 
+  APP_MODE: prod
+```
+kubectl get configmaps
+
+
+to inject the  env to the running container, add the envFrom section under the spec section  
+```sh
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+    ports:
+      - containerPort: 8080
+    envFrom:
+      - configMapRef:
+        name: app-config
+```
+to create a resource, use kubectl create -f <filename>
+
+You can also ref a single env from a configmap 
+
+env:
+  - name: APP_COLOR
+  valueFrom:
+    configMapKeyRef:
+      name: app-config
+      key: APP_COLOR
+
+You can also inject it as a volume
+
+volumes:
+- name: app-config-volume
+  ConfigMap:
+    name: app-config
+
+emptyDir:
+=========
++ An emptyDir volume is created when the Pod is assigned to a node, the emptyDir volume is initially empty
++ All containers in the Pod can read and write the same files in the emptyDir volume, 
++ that volume can be mounted at the same or different paths in each container. 
++ When a Pod is removed from a node for any reason, the data in the emptyDir is deleted permanently.
+
+```sh
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pd
+spec:
+  containers:
+  - image: registry.k8s.io/test-webserver
+    name: test-container
+    volumeMounts:
+    - mountPath: /cache
+      name: cache-volume
+  volumes:
+  - name: cache-volume
+    emptyDir:
+      sizeLimit: 500Mi
+```
+
+hostPath:
+==========
++ A hostPath volume mounts a file or directory from the host node's filesystem into your Pod. #It is risky
++ This is not something that most Pods will need, but it offers a powerful escape hatch for some applications.
+
+```sh
+# This manifest mounts /data/foo on the host as /foo inside the
+# single container that runs within the hostpath-example-linux Pod.
+#
+# The mount into the container is read-only.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-example-linux
+spec:
+  os: { name: linux }
+  nodeSelector:
+    kubernetes.io/os: linux
+  containers:
+  - name: example-container
+    image: registry.k8s.io/test-webserver
+    volumeMounts:
+    - mountPath: /foo
+      name: example-volume
+      readOnly: true
+  volumes:
+  - name: example-volume
+    # mount /data/foo, but only if that directory already exists
+    hostPath:
+      path: /data/foo # directory location on host
+      type: Directory # This field is optional
+```
+SECRETS:
+========
+Secrets just like configmaps are used to store configuration data which can be injected into an object in k8s.
+Unlike configmaps, secrets store sensitive data such as passwords and keys in an encoded manner.
+You can create a secret imperatively by using:
+```sh
+  kubectl create secret generic <secretName> app-secret --from-literal=DB_Host=mysql   \
+                                                        --from-literal=DB_User=root
+```
+    You can ref the secret from a file using the --from-file=app-secret
+    For a declarative approach
+```sh
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+data:
+  DB_Host: mysql
+  DB_User: root 
+  DB_Password: password
+```
+It is however not advisable to pass your secrets in plain text as if defeats the entire purpose.
+To convert the data from plaintext to an encoded format, on a Linux system, use the  
+```sh 
+echo -n 'mysql' | base64
+echo -n 'root' | base64
+echo -n 'password' | base64
+```
+```sh
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+data:
+  DB_Host: sjhdvdv=
+  DB_User: fnvjsf== 
+  DB_Password: sffvnhri
+```
+copy the corresponding encoded values and replace and inject them into the file.
+
+kubectl get secrets app-secret
+kubectl describe secrets
+kubectl get secrets app-secret -o yaml
+
+to decode encoded values use the  
+```sh
+echo -n 'djvfjdo=' | base64 --decode
+```
+to inject encoded values into the pod object, use the 
+```sh
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+    ports:
+      - containerPort: 8080
+    envFrom:
+      - secretRef:
+        name: app-secret
+```
+Secrets are not encrypted but rather encoded and can be decoded using the same method. Therefore, do not upload your
+secret files to the GitHub repo.
+
+You can enable encryption at rest:
+```sh
+kubectl get secrets --all-namespaces -o jason | kubectl replace -f -
+```
+https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
 
 
 # NAMESPACES:
@@ -791,140 +990,6 @@ kubectl rollout status deployment/myapp-deployment
 kubectl rollout history deployment/myapp-deployment
 kubectl rollout undo deployment/app 
 ```
-ConfigMaps:
-===========
-this is a way of managing environmental variables in k8s. you can manually inject this variable by passing them  
-as env. But with many def files that require this variable, then you need to create them as a separate object in k8s 
-and simply reference them in your object definition file. This can be done using ConfigMaps and Secrets.
-
-ConfigMaps are used to pass configuration data in the form of key-value pairs in k8s and then injected into pods.
-```sh
-kubectl create configmap <ConfigName> --from-literal=APP_COLOR=blue \
-                                   --from-literal=APP_MODE=prod  
-                   OR 
-kubectl create configmap app-config --from-file=<pathtofile>
-```
-```sh
-APP_COLOR: blue 
-APP_MODE: prod
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: app-config
-data:
-  APP_COLOR: blue 
-  APP_MODE: prod
-```
-kubectl get configmaps
-
-
-to inject the  env to the running container, add the envFrom section under the spec section  
-```sh
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nginx
-spec:
-  containers:
-  - image: nginx
-    name: nginx
-    ports:
-      - containerPort: 8080
-    envFrom:
-      - configMapRef:
-        name: app-config
-```
-to create resource, use kubectl create -f <filename>
-
-You can also ref a single env from a configmap 
-
-env:
-  - name: APP_COLOR
-  valueFrom:
-    configMapKeyRef:
-      name: app-config
-      key: APP_COLOR
-
-You can as well inject it as a volume
-
-volumes:
-- name: app-config-volume
-  ConfigMap:
-    name: app-config
-
-SECRETS:
-========
-Secrets just like configmaps are used to store configuration data which can be injected into an object in k8s.
-Unlike configmaps, secrets store sensitive data such as passwords and keys in an encoded manner.
-You can create a secret imperatively by using:
-```sh
-  kubectl create secret generic <secretName> app-secret --from-literal=DB_Host=mysql   \
-                                                        --from-literal=DB_User=root
-```
-    You can ref the secret from a file using the --from-file=app-secret
-    For a declarative approach
-```sh
-apiVersion: v1
-kind: Secret
-metadata:
-  name: app-secret
-data:
-  DB_Host: mysql
-  DB_User: root 
-  DB_Password: password
-```
-It is however not advisable to pass your secrets in plain text as if defeats the entire purpose.
-To convert the data from plaintext to an encoded format, on a Linux system, use the  
-```sh 
-echo -n 'mysql' | base64
-echo -n 'root' | base64
-echo -n 'password' | base64
-```
-```sh
-apiVersion: v1
-kind: Secret
-metadata:
-  name: app-secret
-data:
-  DB_Host: sjhdvdv=
-  DB_User: fnvjsf== 
-  DB_Password: sffvnhri
-```
-copy the corresponding encoded values and replace and inject them into the file.
-
-kubectl get secrets app-secret
-kubectl describe secrets
-kubectl get secrets app-secret -o yaml
-
-to decode encoded values use the  
-```sh
-echo -n 'djvfjdo=' | base64 --decode
-```
-to inject encoded values into the pod object, use the 
-```sh
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nginx
-spec:
-  containers:
-  - image: nginx
-    name: nginx
-    ports:
-      - containerPort: 8080
-    envFrom:
-      - secretRef:
-        name: app-secret
-```
-Secrets are not encrypted but rather encoded and can be decoded using the same method. Therefore, do not upload your
-secret files to the GitHub repo.
-
-You can enable encryption at rest:
-```sh
-kubectl get secrets --all-namespaces -o jason | kubectl replace -f -
-```
-https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
 
 Multi Container PODS:
 =====================
