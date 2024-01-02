@@ -93,6 +93,8 @@ check your init system:
 #To use the systemd cgroup driver in /etc/containerd/config.toml with runc, set
 ```sh
 sudo vi /etc/containerd/config.toml
+or
+echo -n > /etc/containerd/config.toml
 ```
 delete all file content and paste the following:
 ```sh
