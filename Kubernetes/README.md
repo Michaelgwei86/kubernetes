@@ -4,8 +4,7 @@
  
 
  ## K8S ARCHITECTURE:
-   
-  
+
 ### ControlPlane: MasterNode
      
   + 1. **ApiServer:**
@@ -727,7 +726,8 @@ The reclaim policy for a PersistentVolume tells the cluster what to do with the 
 + Delete
 
  # SECURITY:
- https://kubernetes.io/images/docs/4c.png
+![4c](https://github.com/CHAFAH/DevOps_Setup/assets/125821852/eee2926b-6e4a-4e4a-ba70-36b6c2cc4fff)
+
  
 # NAMESPACES:
 
