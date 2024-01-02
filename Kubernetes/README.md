@@ -725,6 +725,10 @@ The reclaim policy for a PersistentVolume tells the cluster what to do with the 
 + Recycle
 + Reclaim
 + Delete
+
+ # SECURITY:
+ https://kubernetes.io/images/docs/4c.png
+ 
 # NAMESPACES:
 
   A namespace is simply a distinct working area in k8s where a defined set of resources rules and users can  
