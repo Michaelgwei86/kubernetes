@@ -31,7 +31,7 @@
          ReplicaSet
          DaemonSet
          ReplicationController
- ## WorkerNodes:
+ ## Node Components:
  
   + 1. **kubelet**: 
      responsible for managing and operating containers. communicate with control-plane 
