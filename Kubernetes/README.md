@@ -34,10 +34,11 @@
  ## Node Components:
  
   + 1. **kubelet**: 
-     responsible for managing and operating containers. communicate with control-plane 
+    The Kubelet is responsible for managing and ensuring the running of containers created by Kubernetes. communicate with control-plane 
   it registers nodes into the cluster. It monitors nodes and pods in the cluster every 10 minutes and 
   relates feedback to the API which is stored in the etcd.cluster
   + 2. **container runtime**:
+    A fundamental component that empowers Kubernetes to run containers effectively. It is responsible for managing the execution and lifecycle of containers within the Kubernetes environment.
    [Container-d] docker pulling containered images
   + 3. **kube-proxy**: 
     enables network communication and load balancing between pods and services within the cluster.
@@ -62,14 +63,22 @@ workloads receive the necessary resources and performance, while also allowing f
 utilization.
 
 ## PODS:
+A Pod is a group of one or more containers, with shared storage and network resources, and a specification for how to run the containers
 - The aim is to deploy applications as containers running on a set of machines. 
 - Containers do not run directly on the node but on Pods. 
-- Pod is the single instance of an application and the smallest object in k8s/.
+- Pod is the single instance of an application and the smallest object in k8s.
 - If the user base increases, you can scale additional pods on the node, and if the node runs out of storage,
   you can spin up new nodes and assign new pods of the same or diff containers to it.
 - Two containers of the same kind can not run in the same pod.
 - There are multi-container pods which are helper containers running a process for the pod. they both live and die 
 at the same time. they can refer to each other using localhost.
+
+```bash
+source <(kubectl completion bash) # set up autocomplete in bash into the current shell, bash-completion package should be installed first.
+echo "source <(kubectl completion bash)" >> ~/.bashrc # add autocomplete permanently to your bash shell.
+alias k=kubectl
+complete -o default -F __start_kubectl k
+```
 ```bash
 kubectl run nginx --image nginx
 ```
@@ -80,11 +89,11 @@ apiVersion: # this is the version of the k8s API, it is mandatory Pod: v1 , serv
 kind: # This refers to the type of object to be created such as Pod, ReplicaSet, Deployment, etc string
 metadata: # This is data about the object such as name and labels. Metadata is a dictionary, it is indented
    name: myapp #
-   labels: # it is a dictionary and can take any kind of key-value pair such as
+   labels: # It is a dictionary and can take any kind of key-value pair such as
       app: myapp # It is a string
       type: front-end
-note: you can only add name and labels under metadata or specification from k8s 
-spec: # this provides additional information about the object to create. it varries per object
+note: you can only add names and labels under metadata or specifications from k8s 
+spec: # This provides additional information about the object to create. it varies per object
   containers:  list/array
       - name: nginx-container  # first item in the list
         image: nginx
@@ -104,6 +113,8 @@ spec:
   container:
   - name: nginx-container
     image: nginx
+    ports:
+    - containerPort: 80
 ```
 ```sh
 - kubectl apply/create -f <filename> #to create declaratively from a yml file
@@ -112,6 +123,8 @@ spec:
 - kubectl create deployment redis-deployment --image=redis123 -o yaml #print out output
 - kubectl edit pod <podname>
 ```
+
+# POD AND CONTROLLERS:
 ## REPLICASETS:
 Controllers are the brain behind k8s, they monitor k8s objects and respond accordingly.
 - the replication controller helps increase the number of pods in the node for high availability.
@@ -189,7 +202,8 @@ availability. When a newer version of that application is available in docker, y
 to avoid downtime of the application.
 suppose an update has issues, you will want to do a rollback to the previous working version   
 + You can also make changes such as resources and the number of pods.
-+ Deployment provides the capability to upgrade the underlying instance such as rolling-update, pause, upgrade
++ Deployment provides the capability to upgrade the underlying instance such as rolling update, pause, upgrade, Rollback,
++ In creating a deployment, a ReplicaSet and Pod are created in the background
 
 ```sh
 apiVersion: apps/v1
@@ -200,7 +214,7 @@ metadata:
     app: myapp 
     type: front-end
 spec:
-  template:
+  template:  #Normal Pod template except ApiVersion and Kind
     metadata:
       name: myapp
       labels:
@@ -213,7 +227,7 @@ spec:
   replicas: 3
   selector:
     matchLabels:
-      type: front-end # This must match the label that was input in the object metadata section
+      type: front-end # must match .spec.template.metadata.labels, or it will be rejected by the API.
 ```
 ```sh
 kubectl get deployment
