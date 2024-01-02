@@ -124,7 +124,55 @@ spec:
 - kubectl edit pod <podname>
 ```
 
-# POD AND CONTROLLERS:
+# POD AND CONTROLLERS - KUBERNETES WORKLOAD:
+
+## Deployments
++ When you want to deploy an application, you may want to deploy several pods of that application for high 
+availability. When a newer version of that application is available in docker, you want to gradually update
+to avoid downtime of the application.
+suppose an update has issues, you will want to do a rollback to the previous working version   
++ You can also make changes such as resources and the number of pods.
++ Deployment provides the capability to upgrade the underlying instance such as rolling update, pause, upgrade, Rollback,
++ In creating a deployment, a ReplicaSet and Pod are created in the background
+
+```sh
+apiVersion: apps/v1
+Kind: Deployment
+metadata: 
+  name: myapp-deployment
+  labels:
+    app: myapp 
+    type: front-end
+spec:
+  template:  #Normal Pod template except ApiVersion and Kind
+    metadata:
+      name: myapp
+      labels:
+        app: myapp
+        type: front-end
+    spec:
+      container:
+      - name: nginx-container
+        image: nginx 
+  replicas: 3
+  selector:
+    matchLabels:
+      type: front-end # must match .spec.template.metadata.labels, or it will be rejected by the API.
+```
+```sh
+kubectl get deployment
+kubectl create deployment --image=nginx nginx --dry-run=client -o yaml
+kubectl create deployment --image=nginx nginx --dry-run=client -o yaml > nginx-deployment.yaml
+kubectl create deployment --image=nginx nginx --replicas=4 --dry-run=client -o yaml > nginx-deployment.yaml
+kubectl set image deployment/nginx-deployment nginx=nginx:1.16.1
+kubectl edit deployment/nginx-deployment
+kubectl rollout status deployment/nginx-deployment
+kubectl rollout undo deployment/nginx-deployment --to-revision=2
+kubectl get rs
+kubectl get pods
+kubectl describe deployments
+kubectl scale deployment/nginx-deployment --replicas=10
+```
 ## REPLICASETS:
 A ReplicaSet maintains a stable set of replica Pods running at any given time. As such, it is often used to guarantee the availability of a specified number of identical Pods
 Controllers are the brain behind k8s, they monitor k8s objects and respond accordingly.
@@ -179,51 +227,158 @@ spec:
     matchLabels:
       type: front-end # This must match the label that was input in the object metadata section
 ```
+# AUTOSCALER
+https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/
+You can use a Horizontal Pod AutoScaler (HPA)
 ```sh
-k get rs 
+#kubectl autoscale rs myapp-rc --cpu-percent=50 --min=1 --max=10
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: frontend-scaler
+spec:
+  scaleTargetRef:
+    kind: ReplicaSet
+    name: myapp-rc
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 50
+```
+
+You can generate load on your pods by running the command
+```sh
+# Run this in a separate terminal
+# so that the load generation continues and you can carry on with the rest of the steps
+kubectl run -i --tty load-generator --rm --image=nginx --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"
+```
+```sh
+# type Ctrl+C to end the watch when you're ready
+kubectl get hpa myapp-rc --watch
 k get pods 
 ```
-
-## Deployments
-
-+ When you want to deploy an application, you may want to deploy several pods of that application for high 
-availability. When a newer version of that application is available in docker, you want to gradually update
-to avoid downtime of the application.
-suppose an update has issues, you will want to do a rollback to the previous working version   
-+ You can also make changes such as resources and the number of pods.
-+ Deployment provides the capability to upgrade the underlying instance such as rolling update, pause, upgrade, Rollback,
-+ In creating a deployment, a ReplicaSet and Pod are created in the background
+## STATEFULSETS:
++ StatefulSet is the workload API object used to manage stateful applications.
++ Manages the deployment and scaling of a set of Pods, and provides guarantees about the ordering and uniqueness of these Pods
++ Though susceptible to failure, they provide persistence to storage volumes and can match existing volumes to Pods replaced from failures
++ Stable, unique network identifiers.
++ Stable, persistent storage.
++ Ordered, graceful deployment and scaling.
++ Ordered, automated rolling updates.
 
 ```sh
-apiVersion: apps/v1
-Kind: Deployment
-metadata: 
-  name: myapp-deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
   labels:
-    app: myapp 
-    type: front-end
+    app: nginx
 spec:
-  template:  #Normal Pod template except ApiVersion and Kind
-    metadata:
-      name: myapp
-      labels:
-        app: myapp
-        type: front-end
-    spec:
-      container:
-      - name: nginx-container
-        image: nginx 
-  replicas: 3
+  ports:
+  - port: 80
+    name: web
+  clusterIP: None
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: web
+spec:
   selector:
     matchLabels:
-      type: front-end # must match .spec.template.metadata.labels, or it will be rejected by the API.
+      app: nginx # has to match .spec.template.metadata.labels
+  serviceName: "nginx"
+  replicas: 3 # by default is 1
+  minReadySeconds: 10 # by default is 0
+  template:
+    metadata:
+      labels:
+        app: nginx # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: nginx
+        image: registry.k8s.io/nginx-slim:0.8
+        ports:
+        - containerPort: 80
+          name: web
+        volumeMounts:
+        - name: www
+          mountPath: /usr/share/nginx/html
+  volumeClaimTemplates:
+  - metadata:
+      name: www
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "my-storage-class"
+      resources:
+        requests:
+          storage: 1Gi
+```
+
+## DEAMONSETS:
+
+Deamonsets are like replicasets which help you run one instance of pods, but it runs one copy of your pod on every  
+node on the cluster.
+the deamonset ensures that one copy of the pod is always running on every node in the cluster.
+A use case is if you are deploying a log collecting or monitoring agent.
+objects like the kube-proxy and network use deamonsets because they have to run on every node.
+```sh
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd-elasticsearch
+  namespace: kube-system
+  labels:
+    k8s-app: fluentd-logging
+spec:
+  selector:
+    matchLabels:
+      name: fluentd-elasticsearch
+  template:
+    metadata:
+      labels:
+        name: fluentd-elasticsearch
+    spec:
+      tolerations:
+      # these tolerations are to have the daemonset runnable on control plane nodes
+      # remove them if your control plane nodes should not run pods
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      containers:
+      - name: fluentd-elasticsearch
+        image: quay.io/fluentd_elasticsearch/fluentd:v2.5.2
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+      # it may be desirable to set a high priority class to ensure that a DaemonSet Pod
+      # preempts running Pods
+      # priorityClassName: important
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
 ```
 ```sh
-kubectl get deployment
-kubectl create deployment --image=nginx nginx --dry-run=client -o yaml
-kubectl create deployment --image=nginx nginx --dry-run=client -o yaml > nginx-deployment.yaml
-kubectl create deployment --image=nginx nginx --replicas=4 --dry-run=client -o yaml > nginx-deployment.yaml
+k create -f <filename>
+kubectl get deamonsets 
+kubectl describe deamonsets
+kubectl get daemonsets --all-namespaces 
 ```
+- How do you get pods to be scheduled on every node?
+- one approach is to use the node name to bypass the scheduler and place a pod on a desired node.
 
 ## Labels and Selectors:
 + Labels are used as filters for ReplicaSet. Labels allow the rs to know what pod in the cluster or nodes 
@@ -536,39 +691,6 @@ Setting appropriate resource requests and limits for pods is crucial for efficie
 within a Kubernetes cluster. Properly configured QoS levels help ensure that critical workloads are prioritized 
 and that the cluster operates smoothly without resource contention issues.
 
-## DEAMONSETS:
-
-Deamonsets are like replicasets which help you run one instance of pods, but it runs one copy of your pod on every  
-node on the cluster.
-the deamonset ensures that one copy of the pod is always running on every node in the cluster.
-A use case is if you are deploying a log collecting or monitoring agent.
-objects like the kube-proxy and network use deamonsets because they have to run on every node.
-```sh
-apiVersion: apps/v1
-kind: Deamonset
-metadata:
-  name: monitoring-agent
-spec:
-  selector: monitoring-agent
-  matchLabels:
-    app: monitoring-agent
-  template:
-    metadata:
-      labels:
-        app: monitoring-agent
-    spec:
-      containers:
-      - image: monitoring-agent
-        name: monitoring-agent
-```
-```sh
-k create -f <filename>
-kubectl get deamonsets 
-kubectl describe deamonsets
-kubectl get daemonsets --all-namespaces 
-```
-- How do you get pods to be scheduled on every node?
-- one approach is to use the node name to bypass the scheduler and place a pod on a desired node.
 
 
 STATIC PODS:
