@@ -227,7 +227,7 @@ spec:
     matchLabels:
       type: front-end # This must match the label that was input in the object metadata section
 ```
-# AUTOSCALER
+## AUTOSCALER
 https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/
 You can use a Horizontal Pod AutoScaler (HPA)
 ```sh
@@ -380,11 +380,11 @@ kubectl get daemonsets --all-namespaces
 - How do you get pods to be scheduled on every node?
 - one approach is to use the node name to bypass the scheduler and place a pod on a desired node.
 
-## Labels and Selectors:
+# Labels and Selectors:
 + Labels are used as filters for ReplicaSet. Labels allow the rs to know what pod in the cluster or nodes 
 placed under its management since there could be multiple pods running in the cluster.
 + The template definition section is required in every rs, even for pods that were created before the rs 
-+ This is due to the fact that if the pod fails and is to be recreated, it will need the spec to recreate it
++ This is because if the pod fails and is to be recreated, it will need the spec to recreate it
 
 - if you want to scale from 3 to 6 replicas, update the replicas to 6 and run
 ```sh
@@ -394,9 +394,17 @@ placed under its management since there could be multiple pods running in the cl
  kubectl edit pod/rs/rc/deploy <podname>
 ```
 
-## Services
-Kubernetes service enables communication between various components within and outside the application and between  
-other applications and users. Services enable the frontend app to be available to users and btw frontend and backend
+# Services, Load balancing and Networking:
++ Pods in a cluster have a unique cluster-wide IP, acting like separate VMs
++ Pods can communicate with all other Pods without NAT
++ Kubernetes service enables communication between various components within and outside the application and between other applications and users.
++ Services expose groups of Pods over a network.
+
+ A full-stack web app typically has several pods such as frontend pods hosting a web server,
+  the backend hosting the app, and pods hosting a db. Kubernetes service can group all pod groups  
+  and provide a single backend to access the pods. you can create another service for all pods running the DB 
+  These pods for different applications can therefore be scaled like microservices without impacting the other.
+  A separate SVC for frontend, for backend, and db. 
 
 For external communication,
 
@@ -406,9 +414,33 @@ To access the application externally, the k8s service enables communication from
 
 ## TYPES:
 
-### 1. *NodePort*:
-The k8s service maps a port on the Node to a port on the Pod(target)
-The NodePort is a port range on the Node that gives external access. it ranges from 30000-32767
+## 1. *ClusterIP*:
++ This default Service type assigns an IP address from a pool of IP addresses that your cluster has reserved for that purpose. CIDR
++ You can specify your cluster IP address as part of a Service creation request
+  - This type of service that allows communication between pods in a cluster is called cluster IP service.
+```sh
+apiVersion: v1
+Kind: Service
+metadata: 
+  name: backend
+spec:
+  type: ClusterIP
+  ports:
+    - targetPort: 80  # (port on Pod). it will assume port if not specified
+      port: 80 # port on service. this is a mandatory field
+  selector:
+    app: myapp # This is the label that was used in the deployment metadata section
+    type: backend
+```
+kubectl create -f <filename>
+kubectl get svc 
+
+the service can be accessed by other pods in the cluster using the service name or ClusterIP
+
+### 2. *NodePort*:
++ The k8s service maps a port on the Node to a port on the Pod(target)
++ The NodePort is a port range on the Node that gives external access. it ranges from 30000-32767
++ If you set the type field to NodePort, the Kubernetes control plane allocates a port from a range specified by --service-node-port-range flag (default: 30000-32767)
 
 apiVersion: v1
 Kind: Service
@@ -433,37 +465,9 @@ the same values. the service uses a random algorithm to route traffic to all pod
 - If the pods are running on different nodes in the cluster, you can access it by calling the IP of any node in the  
 cluster. Service is a cluster-wide resource in k8s.
 
-## 2. *ClusterIP*:
-
-  A full-stack web app typically has a number of pods such as frontend pods hosting a web server,
-  the backend hosting the app, and pods hosting a db. Kubernetes service can group all pod groups together 
-  and provide a single backend to access the pods. you can create another service for all pods running the DB 
-  These pods for different applications can therefore be scaled like microservices without impacting the other.
-  A separate SVC for frontend, for backend, and for db. 
-  - This type of service that allows communication between pods in a cluster is called cluster IP service.
-```sh
-apiVersion: v1
-Kind: Service
-metadata: 
-  name: backend
-spec:
-  type: ClusterIP
-  ports:
-    - targetPort: 80  # (port on Pod). it will assume port if not specified
-      port: 80 # port on service. this is a mandatory field
-  selector:
-    app: myapp # This is the label that was used in the deployment metadata section
-    type: backend
-```
-kubectl create -f <filename>
-kubectl get svc 
-
-the service can be accessed by other pods in the cluster using the service name or ClusterIP
-
 ### 3. *LoadBalancer*:
-When multiple pods of an application are deployed, they can all be accessed by using the diff IPs of the nodes
-mapped to the nodePort. 
-However, end users need to be provided with a single endpoint that can route traffic to all the pods.
+On cloud providers that support external load balancers, setting the type field to LoadBalancer provisions a load balancer for your Service. 
+The actual creation of the load balancer happens asynchronously, and information about the provisioned balancer is published in the Service's
 K8s have native support for cloud platforms 
 ```sh
 apiVersion: v1
@@ -479,7 +483,11 @@ spec:
     app: myapp # This is the label that was used in the deployment metadata section
     type: backend
 ```
-## NAMESPACES:
+
+# STORAGE:
+
+
+# NAMESPACES:
 
   A namespace is simply a distinct working area in k8s where a defined set of resources rules and users can  
   be assigned to a namespace. 
