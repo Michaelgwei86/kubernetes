@@ -732,7 +732,7 @@ Security in Kubernetes is mainly in the area of
 
 ![4c](https://github.com/CHAFAH/DevOps_Setup/assets/125821852/eee2926b-6e4a-4e4a-ba70-36b6c2cc4fff)
 
- ## Authentication
+ ## Authentication (Login)
 + All Kubernetes clusters have two categories of users: service accounts managed by Kubernetes, and normal users.
 + You can authenticate into the cluster by either
 ```sh
@@ -835,6 +835,98 @@ kubectl config use-context myuser
   https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/
   
  ## Authorization
+ + After being authenticated into a k8s cluster, all API requests made by an authenticated user in the cluster must be authorized by the API server against all objects and processes
+ + Permissions in the cluster to make API calls are denied by default
+ + The API request attributes being authorized are either the user, group, resource, verb, namespace path etc
+### Authorization Modes
+### Node
++ Grant special permissions to the kubelet based on the pods they are scheduled to run
+### ABAC
+https://kubernetes.io/docs/reference/access-authn-authz/abac/
++ Rights are granted to users through the use of policies that combine attributes.
++ The policies can use any type of attribute (user, resource, object, environment, etc)
+#Examples
++ Alice can do anything to all resources:
+```sh
+{"apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": {"user": "alice", "namespace": "*", "resource": "*", "apiGroup": "*"}}
+```
++ Bob can just read pods in namespace "projectCaribou":
+```sh
+{"apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": {"user": "bob", "namespace": "projectCaribou", "resource": "pods", "readonly": true}}
+```
+### RBAC
+https://kubernetes.io/docs/reference/access-authn-authz/rbac/
++ This is a way of authorization where users in the cluster are permitted to perform actions based on their role in the company
++ This generally follows the principles of least privilege
++ To enable RBAC, start the apiserver with --authorization-mode=RBAC.
++ The RBAC permissions are granted in the form of Roles and ClsuterRoles which are additive i.e, there is not deny
++ A Role always sets permissions within a particular namespace; when you create a Role, you have to specify the namespace it belongs in.
++ ClusterRole, by contrast, is a non-namespaced resource.
++ A RoleBinding or ClusterRoleBinding is used to attach the ClusterRole or Role to the new user.
+
+## *Role and RoleBinding Example:*
+```sh
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: dev
+  name: pod-reader
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+# This role binding allows "jane" to read pods in the "default" namespace.
+# You need to already have a Role named "pod-reader" in that namespace.
+kind: RoleBinding
+metadata:
+  name: read-pods
+  namespace: dev
+subjects:
+# You can specify more than one "subject"
+- kind: User
+  name: jane # "name" is case sensitive
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  # "roleRef" specifies the binding to a Role / ClusterRole
+  kind: Role #this must be Role or ClusterRole
+  name: pod-reader # this must match the name of the Role or ClusterRole you wish to bind to
+  apiGroup: rbac.authorization.k8s.io
+````
+
+## *ClusterRole and ClusterRoleBinding Example:*
+```sh
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  # "namespace" omitted since ClusterRoles are not namespaced
+  name: secret-reader
+rules:
+- apiGroups: [""]
+  #
+  # at the HTTP level, the name of the resource for accessing Secret
+  # objects is "secrets"
+  resources: ["secrets"]
+  verbs: ["get", "watch", "list"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+# This cluster role binding allows anyone in the "manager" group to read secrets in any namespace.
+kind: ClusterRoleBinding
+metadata:
+  name: read-secrets-global
+subjects:
+- kind: Group
+  name: manager # Name is case sensitive
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: secret-reader
+  apiGroup: rbac.authorization.k8s.io
+```
+
 # NAMESPACES:
 
   A namespace is simply a distinct working area in k8s where a defined set of resources rules and users can  
@@ -842,7 +934,7 @@ kubectl config use-context myuser
 - By default, a k8s cluster comes with a default namespace. Here, a user can provision resources.
 - the subsystem namespace is also created by default for a set of pods and services for its functioning.
 - The kubepublic is also created to host resources that are made available to the public.
-- Within a cluster, you can create diff namespaces for different projects and allocate resources to that namespace.
+- Within a cluster, you can create different namespaces for different projects and allocate resources to that namespace.
 - Resources from the same namespaces can refer to each other by their names,
 - they can also communicate with resources from another namespace by their names and append their namespace.
 eg msql.connect("db-service.dev.svc.cluster.local")
