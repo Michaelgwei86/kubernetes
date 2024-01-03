@@ -3,9 +3,9 @@
   # KUBERNETES:
  
 
-                           ## K8S ARCHITECTURE:
+  ## K8S ARCHITECTURE:
 
-### ControlPlane: MasterNode
+#### ControlPlane: MasterNode
      
   + 1. **ApiServer:**
     + Primary mgnt component/ exposes k8s API serving as frontend interface for all cluster operations
