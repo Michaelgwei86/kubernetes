@@ -557,7 +557,7 @@ volumes:
     name: app-config
 
 ### 2. *emptyDir:*
-=========
+
 + An emptyDir volume is created when the Pod is assigned to a node, the emptyDir volume is initially empty
 + All containers in the Pod can read and write the same files in the emptyDir volume, 
 + that volume can be mounted at the same or different paths in each container. 
@@ -614,7 +614,7 @@ spec:
       type: Directory # This field is optional
 ```
 ### 4. *SECRETS:*
-========
+
 Secrets just like configmaps are used to store configuration data which can be injected into an object in k8s.
 Unlike configmaps, secrets store sensitive data such as passwords and keys in an encoded manner.
 You can create a secret imperatively by using:
@@ -933,7 +933,7 @@ roleRef:
 ```
 
 # NETWORKING:
-  ===========
+  
 + Linux Networking Basics:
   - Switching:
     to establish communication between two or more devices, an interface on each host is needed to connect them to the switch.
