@@ -732,8 +732,92 @@ Security in Kubernetes is mainly in the area of
 
 ![4c](https://github.com/CHAFAH/DevOps_Setup/assets/125821852/eee2926b-6e4a-4e4a-ba70-36b6c2cc4fff)
 
- * Authentication
- * Authorization
+ ## Authentication
++ All Kubernetes clusters have two categories of users: service accounts managed by Kubernetes, and normal users.
++ You can authenticate into the cluster by either
+```sh
+kubectl create ns dev
+kubectl create sa development --ns dev
+kubectl create role dev --ns dev
+kubectl create roleBinding dev --role=dev --serviceAccount=development:dev
+```
+
+For human users, When using client certificate authentication, you can generate certificates manually through easyrsa, openssl or cfssl
+
+## openssl
+openssl can manually generate certificates for your cluster.
+
+1. Generate a ca.key with 2048bit:
+```sh
+openssl genrsa -out ca.key 2048
+```
+2.  According to the ca.key generate a ca.crt (use -days to set the certificate effective time):
+```sh
+openssl req -x509 -new -nodes -key ca.key -subj "/CN=${MASTER_IP}" -days 10000 -out ca.crt
+```
+3. Generate a server.key with 2048bit:
+```sh
+openssl genrsa -out server.key 2048
+```
+4. Create a config file for generating a Certificate Signing Request (CSR).
+
+Be sure to substitute the values marked with angle brackets (e.g. <MASTER_IP>) with real values before saving this to a file (e.g. csr.conf).
+Note that the value for MASTER_CLUSTER_IP is the service cluster IP for the API server as described in the previous subsection. 
+The sample below also assumes that you are using cluster.local as the default DNS domain name.
+```sh
+[ req ]
+default_bits = 2048
+prompt = no
+default_md = sha256
+req_extensions = req_ext
+distinguished_name = dn
+
+[ dn ]
+C = <country>
+ST = <state>
+L = <city>
+O = <organization>
+OU = <organization unit>
+CN = <MASTER_IP>
+
+[ req_ext ]
+subjectAltName = @alt_names
+
+[ alt_names ]
+DNS.1 = kubernetes
+DNS.2 = kubernetes.default
+DNS.3 = kubernetes.default.svc
+DNS.4 = kubernetes.default.svc.cluster
+DNS.5 = kubernetes.default.svc.cluster.local
+IP.1 = <MASTER_IP>
+IP.2 = <MASTER_CLUSTER_IP>
+
+[ v3_ext ]
+authorityKeyIdentifier=keyid,issuer:always
+basicConstraints=CA:FALSE
+keyUsage=keyEncipherment,dataEncipherment
+extendedKeyUsage=serverAuth,clientAuth
+subjectAltName=@alt_names
+```
+5. Generate the certificate signing request based on the config file:
+```sh
+openssl req -new -key server.key -out server.csr -config csr.conf
+```
+6. Generate the server certificate using the ca.key, ca.crt and server.csr:
+```sh
+openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key \
+    -CAcreateserial -out server.crt -days 10000 \
+    -extensions v3_ext -extfile csr.conf -sha256
+```
+7. View the certificate signing request:
+```sh
+openssl req  -noout -text -in ./server.csr
+```
+8. View the certificate:
+```sh
+openssl x509  -noout -text -in ./server.crt
+```
+ ## Authorization
 # NAMESPACES:
 
   A namespace is simply a distinct working area in k8s where a defined set of resources rules and users can  
@@ -851,7 +935,7 @@ SCHEDULING:
   pods on nodes based on several factors such as resources,
 - But if you want to override and schedule your pods on specific nodes for some reason, you can do that by
   specifying the nodeName in the pod definition file.
-- If a scheduler does not exist in the cluster, the pod will continually be in a pending state.
+- If a scheduler does not exist in the cluster, the pod will continually be pending.
 - If you need a pod to run on a specific node, declare it at the time of creation.
 - Kubernetes does not allow node modification after the pod has already been created.
 - It can only be modified by creating a binding object setting the target to the NodeName and then sending a post 
