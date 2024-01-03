@@ -61,7 +61,11 @@ workloads or pods within a cluster. Kubernetes provides mechanisms to manage QoS
 workloads receive the necessary resources and performance, while also allowing for efficient resource 
 utilization.
 
-## PODS:
+
+
+## POD AND CONTROLLERS - KUBERNETES WORKLOAD:
+
+### 1. *PODS:*
 A Pod is a group of one or more containers, with shared storage and network resources, and a specification for how to run the containers
 - The aim is to deploy applications as containers running on a set of machines. 
 - Containers do not run directly on the node but on Pods. 
@@ -122,10 +126,7 @@ spec:
 - kubectl create deployment redis-deployment --image=redis123 -o yaml #print out output
 - kubectl edit pod <podname>
 ```
-
-## POD AND CONTROLLERS - KUBERNETES WORKLOAD:
-
-### 1. *DEPLOYMENTS:*
+### 2. *DEPLOYMENTS:*
 + When you want to deploy an application, you may want to deploy several pods of that application for high 
 availability. When a newer version of that application is available in docker, you want to gradually update
 to avoid downtime of the application.
@@ -172,7 +173,7 @@ kubectl get pods
 kubectl describe deployments
 kubectl scale deployment/nginx-deployment --replicas=10
 ```
-### 2. *REPLICASETS:*
+### 3. *REPLICASETS:*
 A ReplicaSet maintains a stable set of replica Pods running at any given time. As such, it is often used to guarantee the availability of a specified number of identical Pods
 Controllers are the brain behind k8s, they monitor k8s objects and respond accordingly.
 - the replication controller helps increase the number of pods in the node for high availability.
@@ -255,7 +256,7 @@ kubectl run -i --tty load-generator --rm --image=nginx --restart=Never -- /bin/s
 kubectl get hpa myapp-rc --watch
 k get pods 
 ```
-### 3.  *STATEFULSETS:*
+### 4.  *STATEFULSETS:*
 + StatefulSet is the workload API object used to manage stateful applications.
 + Manages the deployment and scaling of a set of Pods, and provides guarantees about the ordering and uniqueness of these Pods
 + Though susceptible to failure, they provide persistence to storage volumes and can match existing volumes to Pods replaced from failures
@@ -316,7 +317,7 @@ spec:
           storage: 1Gi
 ```
 
-### 4. *DEAMONSETS:*
+### 5. *DEAMONSETS:*
 
 Deamonsets are like replicasets which help you run one instance of pods, but it runs one copy of your pod on every  
 node on the cluster.
