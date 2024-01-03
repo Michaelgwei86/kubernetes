@@ -948,8 +948,8 @@ ip route add 192.168.2.0/24 via 192.168.1.1
 - For devices in these networks to communicate to the internet, add a new routing on the router for both networks
 - You can also set a default router that routes r=traffic through that IP to the internet
 
-DNS:
-====
+## DNS:
+   ====
 To communicate with different devices and different networks, instead of calling their IP addresses, you can assign a name   
 to that IP which is called name resolution.
 
@@ -986,8 +986,8 @@ google_DNS
 nslookup www.google.com 
 it only queries names from the DNS.
 
-NAMESPACES
-==========
+## Network Namespaces
+    ==========
 - when you run the ps aux in a container deployed in a namespace, it lists the PID of the container as isolated with PID=1 
 - when u run the ps aux on the host, it lists several processes running in the system including the container process.
 - You can create a container with a network NameSpace that shields the container from the network-related information of the host.
@@ -1035,8 +1035,8 @@ ip addr add 192.168.12.5/24 dev v-net-0
 - A gateway needs to be added to the bridge network that allows connectivity. Since the local host has a gateway,
    we can add a route entry in the namespace to route traffic to the host ip.
 
-DOCKER NETWORK:
-==============
+## DOCKER NETWORK:
+     ==============
 - When you create a docker container, you can specify a network for the container to run on.
 docker run nginx --image=mginx --network none
 - this container will not be accessible within or outside.
@@ -1049,7 +1049,7 @@ docker network ls # ip link   # ip addr   # ip netns
 docker creates an interface that attaches the container to the bridge network.
 - the container is also assigned an IP  
 
-Port Mapping:
+## Port Mapping:
 -------------
   - Since the container is on a private network, it can only communicate to another container on the host and not be accessed externally.
   - But the host has an internet gateway that allows traffic to the internet.
@@ -1072,15 +1072,15 @@ to list the rules, run
 iptables etcd-versionl -  t nat 
 
 
-CONTAINER NETWORKING INTERFACE:
-===============================
+## CONTAINER NETWORKING INTERFACE:
+    ===============================
 
 bridge add sf565f6s+6f /var/run/netns/sf565f6s+6f
 
 this is an easier way to add a container to a container through a set standard of how containers should communicate.
 CNI defines a plugin for how containers have to communicate.
 
-# CLUSTER NETWORKING:
+## CLUSTER NETWORKING:
    ===================
 
 - each node must have at least one interface connected to a network.
@@ -1103,7 +1103,7 @@ netstat -npl | grep -i scheduler # to see the port the scheduler listens on| sam
 to see the number of established Connections,
 netstat -npa | grep -i etcd | grep -i 2379 | we -1
 
-# POD NETWORKING:
+## POD NETWORKING:
    ===============
 
 - There is a network at the level of the nodes and also a network at the level of pods on the nodes to establish communication.
@@ -1127,7 +1127,7 @@ the CNI (container network interface) is responsible for assigning IP addresses 
 kubectl logs -n kube-system weave-net-mrks # to see the IP set to the pod 
 kubectl exec <podname> -- ip route # to see the default route configured on the pod
 
-# SERVICE NETWORKING:
+## SERVICE NETWORKING:
    ===================
 - Pods are rarely configured to communicate with each other directory. they make use of k8s services.
 - When a service is created, it is accessible to all pods on the cluster. it is called ClusterIP.
@@ -1141,14 +1141,15 @@ kubectl exec <podname> -- ip route # to see the default route configured on the 
   by the kube-proxy. 
 - the kube-proxy used the service IP address and created a forwarding rule in the cluster, any traffic coming to the IP of the  
   service is forwarded to the IP of the pod. 
-
+```sh
 k get pods -o wide 
 k get svc 
 cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep cluster-ip-range  # to see the IP range for services in the cluster
 iptables -L -t nat | grep <ServiceName>  # to see the routing rules
 k logs -n kube-system <podname> # to see the proxy configured on the pod
+```
 
-# DNS RESOLUTION IN K8S:
+## DNS RESOLUTION IN K8S:
   ======================
 
 - k8s objects within a cluster can refer to each other by calling the ip addresses of the objects within thesame namespace.
@@ -1160,13 +1161,13 @@ k logs -n kube-system <podname> # to see the proxy configured on the pod
 - All services and pods are grouped for a root domain called local 
 
 curl http://websetvice.dev.svc.cluster.local # fully qualified domain name for the service
-- the same is done for pods, except that they are not given names but rather the . in the ip are changed to - 
-Kubernetes implements a DNS server in the cluster called COREDNS,
-- they are deployed as pods. they run the coreDNS executable.
++ the same is done for pods, except that they are not given names but rather the . in the ip are changed to - 
++ Kubernetes implements a DNS server in the cluster called COREDNS,
++ they are deployed as pods. they run the coreDNS executable.
 
 ## KUBERNETES INGRESS:
    ===================
-Scenario:
++ Scenario:
   - You deploy a web app as a pod to host an online store called a store.
   - A database is also deployed to write data from the store app.
   - To make a database accessible to the web app, a ClusterIP service is destroyed for the db.
@@ -1369,8 +1370,6 @@ https://kubernetes.io/docs/concepts/services-networking/ingress
 https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types    
 
 
-
-
 # NAMESPACES:
 
   A namespace is simply a distinct working area in k8s where a defined set of resources rules and users can  
@@ -1382,13 +1381,13 @@ https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types
 - Resources from the same namespaces can refer to each other by their names,
 - they can also communicate with resources from another namespace by their names and append their namespace.
 eg msql.connect("db-service.dev.svc.cluster.local")
-
+```sh
 kubectl get pods > will list only pods in the default namespace
 kubectl get pods --namespace=kubesystem
 
 kubectl apply -f <filename>  ==> will create object in the default namespace
 kubectl create -f <filename> --namespace=kubesystem  ==> will create object in the kubesystem namespace
-
+```
 To ensure that your resources are always created in a specific namespace, add the namespace block in the resources
 definition file
 ```sh
