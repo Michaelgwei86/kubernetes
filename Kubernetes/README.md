@@ -3,7 +3,7 @@
   # KUBERNETES:
  
 
- ## K8S ARCHITECTURE:
+                           ## K8S ARCHITECTURE:
 
 ### ControlPlane: MasterNode
      
