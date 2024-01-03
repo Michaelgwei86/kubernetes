@@ -63,7 +63,7 @@ utilization.
 
 
 
-## POD AND CONTROLLERS - KUBERNETES WORKLOAD:
+# POD AND CONTROLLERS - KUBERNETES WORKLOAD:
 
 ### 1. *PODS:*
 A Pod is a group of one or more containers, with shared storage and network resources, and a specification for how to run the containers
