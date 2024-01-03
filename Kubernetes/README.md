@@ -5,7 +5,7 @@
 
   ## K8S ARCHITECTURE:
 
-#### ControlPlane: MasterNode
+### ControlPlane: MasterNode
      
   + 1. **ApiServer:**
     + Primary mgnt component/ exposes k8s API serving as frontend interface for all cluster operations
@@ -123,9 +123,9 @@ spec:
 - kubectl edit pod <podname>
 ```
 
-# POD AND CONTROLLERS - KUBERNETES WORKLOAD:
+## POD AND CONTROLLERS - KUBERNETES WORKLOAD:
 
-## Deployments
+### *Deployments:*
 + When you want to deploy an application, you may want to deploy several pods of that application for high 
 availability. When a newer version of that application is available in docker, you want to gradually update
 to avoid downtime of the application.
@@ -172,7 +172,7 @@ kubectl get pods
 kubectl describe deployments
 kubectl scale deployment/nginx-deployment --replicas=10
 ```
-## REPLICASETS:
+### *REPLICASETS:*
 A ReplicaSet maintains a stable set of replica Pods running at any given time. As such, it is often used to guarantee the availability of a specified number of identical Pods
 Controllers are the brain behind k8s, they monitor k8s objects and respond accordingly.
 - the replication controller helps increase the number of pods in the node for high availability.
@@ -255,7 +255,7 @@ kubectl run -i --tty load-generator --rm --image=nginx --restart=Never -- /bin/s
 kubectl get hpa myapp-rc --watch
 k get pods 
 ```
-## STATEFULSETS:
+### *STATEFULSETS:*
 + StatefulSet is the workload API object used to manage stateful applications.
 + Manages the deployment and scaling of a set of Pods, and provides guarantees about the ordering and uniqueness of these Pods
 + Though susceptible to failure, they provide persistence to storage volumes and can match existing volumes to Pods replaced from failures
@@ -316,7 +316,7 @@ spec:
           storage: 1Gi
 ```
 
-## DEAMONSETS:
+### *DEAMONSETS:*
 
 Deamonsets are like replicasets which help you run one instance of pods, but it runs one copy of your pod on every  
 node on the cluster.
@@ -378,8 +378,9 @@ kubectl get daemonsets --all-namespaces
 ```
 - How do you get pods to be scheduled on every node?
 - one approach is to use the node name to bypass the scheduler and place a pod on a desired node.
+  
 
-# Labels and Selectors:
+### Labels and Selectors:
 + Labels are used as filters for ReplicaSet. Labels allow the rs to know what pod in the cluster or nodes 
 placed under its management since there could be multiple pods running in the cluster.
 + The template definition section is required in every rs, even for pods that were created before the rs 
@@ -393,7 +394,7 @@ placed under its management since there could be multiple pods running in the cl
  kubectl edit pod/rs/rc/deploy <podname>
 ```
 
-# Services, Load balancing and Networking:
+## Services, Load balancing and Networking:
 + Pods in a cluster have a unique cluster-wide IP, acting like separate VMs
 + Pods can communicate with all other Pods without NAT
 + Kubernetes service enables communication between various components within and outside the application and between other applications and users.
@@ -413,7 +414,7 @@ To access the application externally, the k8s service enables communication from
 
 ## TYPES:
 
-## 1. *ClusterIP*:
+### 1. *ClusterIP*:
 + This default Service type assigns an IP address from a pool of IP addresses that your cluster has reserved for that purpose. CIDR
 + You can specify your cluster IP address as part of a Service creation request
   - This type of service that allows communication between pods in a cluster is called cluster IP service.
@@ -490,8 +491,8 @@ The container is recreated in a clean state and all volumes I lost
 + Therefore persisting volumes are essential in k8s as they persistent volumes exist beyond the lifetime of a pod.
 + These persistent volumes can be a directory that can be used by Pods or shared by containers running in a Pod
 
-## Types of volumes:
-ConfigMaps:
+## Types of Volumes:
+### 1. **ConfigMaps:*
 ===========
 + A ConfigMap provides a way to inject configuration data into pods.
 + This is a way of managing environmental variables in k8s. you can manually inject this variable by passing them as env.
