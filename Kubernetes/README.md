@@ -746,14 +746,14 @@ kubectl create roleBinding dev --role=dev --serviceAccount=development:dev
 + A few steps are required to get a normal user to be able to authenticate and invoke an API. 
 + First, this user must have a certificate issued by the Kubernetes cluster, and then present that certificate to the Kubernetes API.
 
-1. Create private key
+## 1. Create private key
 The following scripts show how to generate PKI private key and CSR. It is important to set CN and O attribute of the CSR.
  CN is the name of the user and O is the group that this user will belong to. You can refer to RBAC for standard groups.
 ```sh
 openssl genrsa -out myuser.key 2048
 openssl req -new -key myuser.key -out myuser.csr -subj "/CN=myuser"
 ```
-2. Create a CertificateSigningRequest
+## 2. Create a CertificateSigningRequest
 + Create a CertificateSigningRequest and submit it to a Kubernetes Cluster via kubectl. Below is a script to generate the CertificateSigningRequest.
 ```sh
 cat <<EOF | kubectl apply -f -
@@ -779,18 +779,18 @@ EOF
 ```sh
 cat myuser.csr | base64 | tr -d "\n"
 ```
-3. Approve the CertificateSigningRequest
+## 3. Approve the CertificateSigningRequest
 + Use kubectl to create a CSR and approve it.
 
 + Get the list of CSRs:
 ```sh
 kubectl get csr
 ```
-4. Approve the CSR:
+## 4. Approve the CSR:
 ```sh
 kubectl certificate approve myuser
 ```
-5. Get the certificate
+## 5. Get the certificate
 
 + Retrieve the certificate from the CSR:
 ```sh
@@ -798,11 +798,11 @@ kubectl get csr/myuser -o yaml
 ```
 + The certificate value is in Base64-encoded format under status.certificate.
 
-6. Export the issued certificate from the CertificateSigningRequest.
+## 6. Export the issued certificate from the CertificateSigningRequest.
 ```sh
 kubectl get csr myuser -o jsonpath='{.status.certificate}'| base64 -d > myuser.crt
 ```
-7. Create Role and RoleBinding
+## 7. Create Role and RoleBinding
 + With the certificate created it is time to define the Role and RoleBinding for this user to access Kubernetes cluster resources.
 
 + This is a sample command to create a Role for this new user:
@@ -813,14 +813,14 @@ kubectl create role developer --verb=create --verb=get --verb=list --verb=update
 ```sh
 kubectl create rolebinding developer-binding-myuser --role=developer --user=myuser
 ```
-8. Add to kubeconfig
+## 8. Add to kubeconfig
 + The last step is to add this user into the kubeconfig file.
 
 + First, you need to add new credentials:
 ```sh
 kubectl config set-credentials myuser --client-key=myuser.key --client-certificate=myuser.crt --embed-certs=true
 ```
-9. Then, you need to add the context:
+## 9. Then, you need to add the context:
 ```sh
 kubectl config set-context myuser --cluster=kubernetes --user=myuser
 ```
