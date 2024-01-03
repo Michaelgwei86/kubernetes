@@ -927,6 +927,450 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ```
 
+# NETWORKING:
+  ===========
++ Linux Networking Basics:
+  - Switching:
+    to establish communication between two or more devices, an interface on each host is needed to connect them to the switch.
+    Use the ip link command to see the interface.
+    Assign an IP to the devices from the network 
+ip addr add 192.168.1.10/24 dev eth0  
+
+ping 192.168.1.10
+- For a system in one network to communicate with another device in a different network, a router is needed.
+- A router helps to connect networks.
+- To add a route, check if a route exists as well as it must be configured in both networks if they intend to communicate 
+route  
+ip route add 192.168.2.0/24 via 192.168.1.1 
+
+- The router gets two IPs  assigned to it to communicate between the two networks.
+- A route
+- For devices in these networks to communicate to the internet, add a new routing on the router for both networks
+- You can also set a default router that routes r=traffic through that IP to the internet
+
+DNS:
+====
+To communicate with different devices and different networks, instead of calling their IP addresses, you can assign a name   
+to that IP which is called name resolution.
+
+cat >> /etc/hosts
+191.168.1.11   db
+
+run the hostname command to see the name set to the device.
+This DNS set on a system for another system is only known to the system and not to all other devices and networks  
+Every run a command like an ssh db,   curl https//:db, it will look into the /etc/hosts file
+because it grew complex and difficult to manage, it was moved to a DNS server where all entries can be added to and  
+then when configured on the host, it will resolve the name from the entry in the DNS server.
+- When an entry is added both on the host file and in the DNS server, the system refers first to the host file.
+- the order can be changed to resolve the DNS server before the host file.
+
+the .com   .org  .edu  .net .io 
+These are top-level domains and they represent the intent of the websites.
+www.google.com
+
+www: is a subdomain # can have multiple subdomains
+. : root
+.com : top-level domain 
+
+when a request is sent to apps.google.com
+Org_DNS
+root_DNS
+.com_DNS
+google_DNS
+- Each time a request is sent, it goes through all these stages to get to the service. 
+- the server will cache the server IP for some time to reduce the time it takes to reach the server
+- you can also make an entry into the host file and use search and the domain name. 
+ there are A name records that maps a name to an ipv4 address
+- You can use nslookup OR dig to query a hostname
+
+nslookup www.google.com 
+it only queries names from the DNS.
+
+NAMESPACES
+==========
+- when you run the ps aux in a container deployed in a namespace, it lists the PID of the container as isolated with PID=1 
+- when u run the ps aux on the host, it lists several processes running in the system including the container process.
+- You can create a container with a network NameSpace that shields the container from the network-related information of the host.
+
+ip netns add red #to create a network namespace
+ip netsn # to list the network ns
+ip link  # to like the interfaces
+ip netns exec red ip link  # to view interfaces within the namespace
+ip -n red addr add 196.168.15.1 dev veth-red # to assign an ip to a namespace 
+
+- to connect the red and the blue namespaces, run the 
+ip link veth-red type veth peer name veth-blue
+- to attach the two interfaces together, run the 
+ip link set veth-red netns red  
+- assign ip to the NameSpace
+ip -n red addr add 196.168.15.1 dev veth-red
+- bing up the interface using  
+ip -n red lint set veth-red up  
+- test connectivity using the 
+ip netns exec red ping 192.168.15.2
+- list the arp table on the red namespace
+ip netns exec red arp  
+
+To enable connectivity between multiple NameSpaces, you need a switch on the host server and
+Use the Bridge network 
+- Add a new interface and set it to bridge 
+ip link add v-net-0 type bridge 
+ip link # it will be status down so you need to bring it up
+ip link set dev n-net-0 up
+- to connect the NameSpaces to the network,  
+ip link add veth-red type veth peer name veth-red-br
+ip link add veth-blue type veth peer name  veth-blue-br
+
+ip link set veth-red netns red 
+ip link set veth-red-br master v-net-0
+- assign ip addresses
+ ip -n red addr add 192.168.15.2 dev veth-red
+ ip -n red link set veth-red up
+
+- Connection will not be established between the host and the NameSpace.
+- to enable communication,  add the bridge network hosting the namespace to the host network
+ip addr add 192.168.12.5/24 dev v-net-0
+
+- These namespaces are not accessible over the internet
+- A gateway needs to be added to the bridge network that allows connectivity. Since the local host has a gateway,
+   we can add a route entry in the namespace to route traffic to the host ip.
+
+DOCKER NETWORK:
+==============
+- When you create a docker container, you can specify a network for the container to run on.
+docker run nginx --image=mginx --network none
+- this container will not be accessible within or outside.
+- with the host network, the container will be accessible by the host.
+docker run --network host nginx.
+if a port say 80 is open on the host, no other container can use that port.
+- the third network is the bridge which has a default ip of 172.17.0.0
+- when docker is installed, the bridge is created by default
+docker network ls # ip link   # ip addr   # ip netns
+docker creates an interface that attaches the container to the bridge network.
+- the container is also assigned an IP  
+
+Port Mapping:
+-------------
+  - Since the container is on a private network, it can only communicate to another container on the host and not be accessed externally.
+  - But the host has an internet gateway that allows traffic to the internet.
+  - Therefore, a port is opened on the host that allows traffic from the container to pass through the host.
+
+  docker run -p 8080:80 nginx
+
+  port 8080 is opened on the host, while port 80 is opened on the container
+  - To access the container externally 
+  curl http://192.168.1.10:8080
+- Docker does this by creating a nat rule on the ip table.
+
+iptables \
+       -t nat \
+       -A DOCKER \
+       -j DNAT \
+       --dport 8080 \
+       --to-destination 172.17.0.3:80 
+to list the rules, run  
+iptables etcd-versionl -  t nat 
+
+
+CONTAINER NETWORKING INTERFACE:
+===============================
+
+bridge add sf565f6s+6f /var/run/netns/sf565f6s+6f
+
+this is an easier way to add a container to a container through a set standard of how containers should communicate.
+CNI defines a plugin for how containers have to communicate.
+
+# CLUSTER NETWORKING:
+   ===================
+
+- each node must have at least one interface connected to a network.
+- Each network must have an address configured.
+- the host must have a unique hostname and a unique mac address.
+- some ports must be opened.
+6443 : Kube-api
+10250 : kubelet  # both master and worker nodes
+10251 : kube-scheduler
+10252 : kube-controller-manager
+2379 : ETCD
+30000-32767 : Services # on the worker nodes
+
+ip address
+ip address shows the type of bridge
+ip route # lists all routes to the internet
+netstat --help
+netstat -npl | grep -i scheduler # to see the port the scheduler listens on| same for any k8s component
+
+to see the number of established Connections,
+netstat -npa | grep -i etcd | grep -i 2379 | we -1
+
+# POD NETWORKING:
+   ===============
+
+- There is a network at the level of the nodes and also a network at the level of pods on the nodes to establish communication.
+- It is not provided by default in k8s.
+- K8s requires that every pod should have its IP addresses
+- Every pod should be able to communicate with other pods on the same and other nodes without NAT.
+- As long as this solution is implemented, the network will be established.
+- there are many networking solutions such as WEAVE / FLANNERL / VMWARE NSX 
+- https://www.weave.works/blog/weave-cloud-end-of-service
+ https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+ Reference links: –
+
+https://www.weave.works/docs/net/latest/kubernetes/kube-addon/#-installation
+https://github.com/weaveworks/weave/releases
+
+ls /etc/cni/net.d/  # to see the cni plugin used in the cluster
+
+IPAM: Ip address management
+the CNI (container network interface) is responsible for assigning IP addresses to pods in the k8s cluster
+
+kubectl logs -n kube-system weave-net-mrks # to see the IP set to the pod 
+kubectl exec <podname> -- ip route # to see the default route configured on the pod
+
+# SERVICE NETWORKING:
+   ===================
+- Pods are rarely configured to communicate with each other directory. they make use of k8s services.
+- When a service is created, it is accessible to all pods on the cluster. it is called ClusterIP.
+- It is used for pods intended to only be accessed within the cluster.
+- if the pod was intended to be accessed externally, a NodePort service will be used, it routes traffic to the internet
+  through a port on the host node. it is also accessible within the cluster.
+- the kubelet service on the worker nodes which is responsible for creating pods also monitors the changes in the cluster 
+  kube-api server. Each time a new pod is to be created, the kubelet involves the CNI plugin to configure networking for the pod.
+- the kube-proxy watched changes through the kube-apiserver, and every time a new service is created the kube-proxy is activated.
+- Services are cluster-wide resources. A service is assigned an IP address from a predefined range which is used  
+  by the kube-proxy. 
+- the kube-proxy used the service IP address and created a forwarding rule in the cluster, any traffic coming to the IP of the  
+  service is forwarded to the IP of the pod. 
+
+k get pods -o wide 
+k get svc 
+cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep cluster-ip-range  # to see the IP range for services in the cluster
+iptables -L -t nat | grep <ServiceName>  # to see the routing rules
+k logs -n kube-system <podname> # to see the proxy configured on the pod
+
+# DNS RESOLUTION IN K8S:
+  ======================
+
+- k8s objects within a cluster can refer to each other by calling the ip addresses of the objects within thesame namespace.
+  If an object is to communicate with another object on the dev namespace, the the name of the object withh be appended by  
+  the name of the NameSpace.
+  curl http://websetvice.dev # the last name of the service is the name of the namespace
+- for each namespace, the dns sercer creates a subdomain for the cluster call dev.
+- for all services in a cluster, the dns server creates another subdomain call svc 
+- All services and pods are grouped for a root domain called local 
+
+curl http://websetvice.dev.svc.cluster.local # fully qualified domain name for the service
+- the same is done for pods, except that they are not given names but rather the . in the ip are changed to - 
+Kubernetes implements a DNS server in the cluster called COREDNS,
+- they are deployed as pods. they run the coreDNS executable.
+
+## KUBERNETES INGRESS:
+   ===================
+Scenario:
+  - You deploy a web app as a pod to host an online store called a store.
+  - A database is also deployed to write data from the store app.
+  - To make a database accessible to the web app, a ClusterIP service is destroyed for the db.
+  - To make the webapp accessible to external users, a NodePort service is deployed say with port 38080
+  - to access the app on the internet, http://<nodeIP>:38080
+- Whenever traffic increases, we increase the number of pods and traffic is routed by the service
+- With a pdt grade app, we do not want users to type the IP every time, so u configure a DNS to access using a name.
+- The name will be something like http://my-store:38080.
+- Since you don't want users to remember the nodePort either, you bring an additional layer btw dns and service and point the DNS  
+  to the server.
+- In the case of a cloud platform, create a service of type LoadBalancer. the cloud will deploy a LoadBalancer.
+- the LB has an external IP that can be shared with users to access the app.
+
+As the company grows you want to add a video app to the store but as a separate app on the same cluster.
+- you create a service for the new app and assign a LoadBalancer. 
+- To redirect traffic to a specific, you need to configure another proxy on the two existing LoadBalancers.
+- each time a user types a specific URL, the proxy routes the traffic to the desired app.
+- You also need to enable SSL for the app so that the user can access the app using https.
+- it can be done at the app level or service level. It is a complex setup.
+- It can all be managed on the k8s cluster just like an object.
+
+- Ingress permits you to provide a single endpoint to access multiple applications as well as manage traffic routing between
+  the defined URL path. It also configures ssl for http access. It is a layer 7 LoadBalancer in k8s.
+- You still need to expose ingress either using NodePort or Cloud Native LoadBalancer.
+
+- First, deploy a reverse proxy like nginx/haproxy   # INGRESS CONTROLLER
+- specify a set of rules to specify ingress   # INGRESS RESOURCES
+
+## Ingress Controller:
+    ===================
+
+They are created using a definition file. the cluster doesn't come with an ingress  controller.
+- To deploy ingress, use any of  GCP HTTP LB  OR NGINX   # Supported and maintained by K8S
+- They are not just LB, they have additional features 
+- it is deployed using  
+
+nginx-ingress.yaml
+```sh
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nginx-ingress-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: nginx-ingress
+  template:
+    metadata:
+      labels:
+        name: nginx-ingress
+    spec:
+      containers:
+        - name: nginx-ingress-controller
+          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.21.0
+          args: 
+            - /nginx-ingress-controller
+            - --configmap=(POD_NAMESPACE) /nginx-configuration
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name 
+            - name: POD_NAMESPACE 
+              valueFrom:
+                fieldRef: 
+                  fieldPath: metadata.namespace
+          ports:
+            - name: http
+              containerPort: 80
+            - name: https
+              containerPort: 443
+---
+nginx-configmap.yaml
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: nginx-configuration
+
+---
+nginx-ingress-svc.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress
+spec:
+  type: NodePort
+  ports:
+    - port:
+      targetPort: 80
+      protocol: TCP
+      name: http 
+    - port:
+      targetPort: 443
+      protocol: TCP
+      name: https
+    selector: nginx-ingress
+---
+nginx-service-account.yaml
+
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: nginx-ingress-serviceaccount
+```
+
+- the nginx program is stored within the image as /nginx-ingress-controller. it must be passed to start the nginx service
+- to decouple this data from the nginx object, create a configmap object with no entries and pass it in
+- Pass two env that carry the pod name and namespace to enable the nginx server to read the configuration data from the pod.
+- specify the pods used by the ingress controller
+- Create a service for the ingress controller
+- Create a service account with roles and rolebinding for permissions for the ingress account to access and 
+   manage the different app 
+
+## Ingress Resources:
+   ==================
+- An ingress resource is a set of rules applied to the ingress controller.
+- Here you can specify that if a user inputs a name, route them to the store etc.
+
+ingress-wear.yaml
+```sh
+apiVersion: extensions/v1beta1
+kind: Ingress 
+metadata: nginx-wear
+spec:
+  backend:
+    serviceName: wear-service   # the name of the service for the app
+    servicePort: 80    # the service port.
+```
+k create ingress <IngressName> - <Namespace> --rule="/watch=ingress-service:8080 --rule"/wear=ingress-service:8080 "
+
+
+k create -f <filename>
+k get ingress  
+
+- Rules are used when you want to route traffic based on different conditions, traafic originating for diff subdomains
+- You can specify multiple rules depending on the number of subdomains existing on the app.
+
+rule 1: www.my-online-store.com /waer   / watch 
+rule2: www.wear.my-online-store.com     /returns  /support
+rule3: www.watch.my-online-store.com 
+rule4: anything els /movies  /tv
+
+ingress resources for multiple rules:
+
+  ingress-resource-rules.yaml
+```sh
+apiVersion: extensions/v1beta1
+kind: Ingress 
+metadata: nginx-wear
+spec:
+  rules:
+  - http:
+    paths:
+    - path: /wear  
+      backend:
+        serviceName: wear-service
+        servicePort: 80
+    - path: /watch
+      backend:
+        serviceName: watch-service
+        servicePort: 80
+```
+kubectl create ingress ingress-wear -n <Namespace> --rule="/wear=wear-service:8080"
+
+
+k describe ingress ingress-resource-rules
+
+- To route traffic based on domain names, add the hsot filed in the spec.
+```sh
+apiVersion: extensions/v1beta1
+kind: Ingress 
+metadata: nginx-wear
+spec:
+  rules:
+  - host: wear.my-online-store.com
+    http:
+      paths:  
+      - backend:
+          serviceName: wear-service
+          servicePort: 80
+  - host: watch.my-online-store.com
+    http:
+      paths:  
+      - backend:
+          serviceName: watch-service
+          servicePort: 80
+```
+    
+Find more information and examples in the below reference link:-
+
+https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#-em-ingress-em- 
+
+References:-
+
+https://kubernetes.io/docs/concepts/services-networking/ingress
+
+https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types    
+
+
+
+
 # NAMESPACES:
 
   A namespace is simply a distinct working area in k8s where a defined set of resources rules and users can  
