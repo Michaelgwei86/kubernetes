@@ -742,81 +742,82 @@ kubectl create role dev --ns dev
 kubectl create roleBinding dev --role=dev --serviceAccount=development:dev
 ```
 
-For human users, When using client certificate authentication, you can generate certificates manually through easyrsa, openssl or cfssl
+# HOW TO ISSUE A CERTIFICATE TO A USER IN THE CLUSTER:
++ A few steps are required to get a normal user to be able to authenticate and invoke an API. 
++ First, this user must have a certificate issued by the Kubernetes cluster, and then present that certificate to the Kubernetes API.
 
-## openssl
-openssl can manually generate certificates for your cluster.
+Create private key
+The following scripts show how to generate PKI private key and CSR. It is important to set CN and O attribute of the CSR. CN is the name of the user and O is the group that this user will belong to. You can refer to RBAC for standard groups.
 
-1. Generate a ca.key with 2048bit:
-```sh
-openssl genrsa -out ca.key 2048
-```
-2.  According to the ca.key generate a ca.crt (use -days to set the certificate effective time):
-```sh
-openssl req -x509 -new -nodes -key ca.key -subj "/CN=${MASTER_IP}" -days 10000 -out ca.crt
-```
-3. Generate a server.key with 2048bit:
-```sh
-openssl genrsa -out server.key 2048
-```
-4. Create a config file for generating a Certificate Signing Request (CSR).
+openssl genrsa -out myuser.key 2048
+openssl req -new -key myuser.key -out myuser.csr -subj "/CN=myuser"
+Create a CertificateSigningRequest
+Create a CertificateSigningRequest and submit it to a Kubernetes Cluster via kubectl. Below is a script to generate the CertificateSigningRequest.
 
-Be sure to substitute the values marked with angle brackets (e.g. <MASTER_IP>) with real values before saving this to a file (e.g. csr.conf).
-Note that the value for MASTER_CLUSTER_IP is the service cluster IP for the API server as described in the previous subsection. 
-The sample below also assumes that you are using cluster.local as the default DNS domain name.
-```sh
-[ req ]
-default_bits = 2048
-prompt = no
-default_md = sha256
-req_extensions = req_ext
-distinguished_name = dn
+cat <<EOF | kubectl apply -f -
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: myuser
+spec:
+  request: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ1ZqQ0NBVDRDQVFBd0VURVBNQTBHQTFVRUF3d0dZVzVuWld4aE1JSUJJakFOQmdrcWhraUc5dzBCQVFFRgpBQU9DQVE4QU1JSUJDZ0tDQVFFQTByczhJTHRHdTYxakx2dHhWTTJSVlRWMDNHWlJTWWw0dWluVWo4RElaWjBOCnR2MUZtRVFSd3VoaUZsOFEzcWl0Qm0wMUFSMkNJVXBGd2ZzSjZ4MXF3ckJzVkhZbGlBNVhwRVpZM3ExcGswSDQKM3Z3aGJlK1o2MVNrVHF5SVBYUUwrTWM5T1Nsbm0xb0R2N0NtSkZNMUlMRVI3QTVGZnZKOEdFRjJ6dHBoaUlFMwpub1dtdHNZb3JuT2wzc2lHQ2ZGZzR4Zmd4eW8ybmlneFNVekl1bXNnVm9PM2ttT0x1RVF6cXpkakJ3TFJXbWlECklmMXBMWnoyalVnald4UkhCM1gyWnVVV1d1T09PZnpXM01LaE8ybHEvZi9DdS8wYk83c0x0MCt3U2ZMSU91TFcKcW90blZtRmxMMytqTy82WDNDKzBERHk5aUtwbXJjVDBnWGZLemE1dHJRSURBUUFCb0FBd0RRWUpLb1pJaHZjTgpBUUVMQlFBRGdnRUJBR05WdmVIOGR4ZzNvK21VeVRkbmFjVmQ1N24zSkExdnZEU1JWREkyQTZ1eXN3ZFp1L1BVCkkwZXpZWFV0RVNnSk1IRmQycVVNMjNuNVJsSXJ3R0xuUXFISUh5VStWWHhsdnZsRnpNOVpEWllSTmU3QlJvYXgKQVlEdUI5STZXT3FYbkFvczFqRmxNUG5NbFpqdU5kSGxpT1BjTU1oNndLaTZzZFhpVStHYTJ2RUVLY01jSVUyRgpvU2djUWdMYTk0aEpacGk3ZnNMdm1OQUxoT045UHdNMGM1dVJVejV4T0dGMUtCbWRSeEgvbUNOS2JKYjFRQm1HCkkwYitEUEdaTktXTU0xMzhIQXdoV0tkNjVoVHdYOWl4V3ZHMkh4TG1WQzg0L1BHT0tWQW9FNkpsYWFHdTlQVmkKdjlOSjVaZlZrcXdCd0hKbzZXdk9xVlA3SVFjZmg3d0drWm89Ci0tLS0tRU5EIENFUlRJRklDQVRFIFJFUVVFU1QtLS0tLQo=
+  signerName: kubernetes.io/kube-apiserver-client
+  expirationSeconds: 86400  # one day
+  usages:
+  - client auth
+EOF
+Some points to note:
 
-[ dn ]
-C = <country>
-ST = <state>
-L = <city>
-O = <organization>
-OU = <organization unit>
-CN = <MASTER_IP>
+usages has to be 'client auth'
 
-[ req_ext ]
-subjectAltName = @alt_names
+expirationSeconds could be made longer (i.e. 864000 for ten days) or shorter (i.e. 3600 for one hour)
 
-[ alt_names ]
-DNS.1 = kubernetes
-DNS.2 = kubernetes.default
-DNS.3 = kubernetes.default.svc
-DNS.4 = kubernetes.default.svc.cluster
-DNS.5 = kubernetes.default.svc.cluster.local
-IP.1 = <MASTER_IP>
-IP.2 = <MASTER_CLUSTER_IP>
+request is the base64 encoded value of the CSR file content. You can get the content using this command:
 
-[ v3_ext ]
-authorityKeyIdentifier=keyid,issuer:always
-basicConstraints=CA:FALSE
-keyUsage=keyEncipherment,dataEncipherment
-extendedKeyUsage=serverAuth,clientAuth
-subjectAltName=@alt_names
-```
-5. Generate the certificate signing request based on the config file:
-```sh
-openssl req -new -key server.key -out server.csr -config csr.conf
-```
-6. Generate the server certificate using the ca.key, ca.crt and server.csr:
-```sh
-openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key \
-    -CAcreateserial -out server.crt -days 10000 \
-    -extensions v3_ext -extfile csr.conf -sha256
-```
-7. View the certificate signing request:
-```sh
-openssl req  -noout -text -in ./server.csr
-```
-8. View the certificate:
-```sh
-openssl x509  -noout -text -in ./server.crt
-```
+cat myuser.csr | base64 | tr -d "\n"
+Approve the CertificateSigningRequest
+Use kubectl to create a CSR and approve it.
+
+Get the list of CSRs:
+
+kubectl get csr
+Approve the CSR:
+
+kubectl certificate approve myuser
+Get the certificate
+Retrieve the certificate from the CSR:
+
+kubectl get csr/myuser -o yaml
+The certificate value is in Base64-encoded format under status.certificate.
+
+Export the issued certificate from the CertificateSigningRequest.
+
+kubectl get csr myuser -o jsonpath='{.status.certificate}'| base64 -d > myuser.crt
+Create Role and RoleBinding
+With the certificate created it is time to define the Role and RoleBinding for this user to access Kubernetes cluster resources.
+
+This is a sample command to create a Role for this new user:
+
+kubectl create role developer --verb=create --verb=get --verb=list --verb=update --verb=delete --resource=pods
+This is a sample command to create a RoleBinding for this new user:
+
+kubectl create rolebinding developer-binding-myuser --role=developer --user=myuser
+Add to kubeconfig
+The last step is to add this user into the kubeconfig file.
+
+First, you need to add new credentials:
+
+kubectl config set-credentials myuser --client-key=myuser.key --client-certificate=myuser.crt --embed-certs=true
+Then, you need to add the context:
+
+kubectl config set-context myuser --cluster=kubernetes --user=myuser
+To test it, change the context to myuser:
+
+kubectl config use-context myuser
++ If you install Kubernetes with kubeadm, most certificates are stored in /etc/kubernetes/pki.
+  https://kubernetes.io/docs/setup/best-practices/certificates/
++ You can manage Kubeadm certificates here
+  https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/
  ## Authorization
 # NAMESPACES:
 
