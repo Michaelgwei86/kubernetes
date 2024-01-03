@@ -1482,7 +1482,7 @@ another live object configuration is created with additional fields and can be v
 there is the last applied file that provides details about the last image of the live configuration.
 
 
-SCHEDULING:
+### SCHEDULING:
 
 - there is a builtin scheduler in the cluster control-plane, that scans through nodes in the cluster and schedules
   pods on nodes based on several factors such as resources,
@@ -1504,8 +1504,8 @@ spec:
      name: nginx
   nodeName: controlplane
 ```
-RESOURCE REQUIREMENTS:
-=======================
+## RESOURCE REQUIREMENTS:
+
 - every pod requires a set of resources to run.
 when a pod is placed on a node, it consumes the resources on that node.
 the scheduler determines the node a pod will be scheduled on based on resource availability.
@@ -1585,8 +1585,8 @@ and that the cluster operates smoothly without resource contention issues.
 
 
 
-STATIC PODS:
-============
+## STATIC PODS:
+
 - Without the controlplane which contains the API server, you can store your configuration files at the path 
   /etc/kubernetes/manifest,.
 - kubernetes frequently visit this directory and any manifest file here to create pods will create the pod.
@@ -1603,8 +1603,8 @@ STATIC PODS:
 
 kubectl get pods -n kube-system
 
-Multiple Schedulers:
-====================
+## Multiple Schedulers:
+
 You can deploy an optional scheduler added to the custom scheduler and configure it to schedule specific pods.
 you can use a pod definition file or wget the scheduler binary and remane the scheduler to a different name.
 to make sure that your object to be created is managed by that scheduler, you can add a scheduler option under
@@ -1617,32 +1617,10 @@ filtering       ===> NodeName/NodeUnschedulable/NodeReourceFit
 scoring         ===> NodeReourceFit/ImageLocality
 binding         ===> Defaultbinding
 
-LOGGING AND MONITORING:
-=======================
-We can monitor the applications deployed in k8s as well as the Kubernetes cluster.
-to monitor resources in the cluster, we can monitor
-- node level metrics  #number of nodes, healthy, memory performance, CPU utilization
-- pod level metric # number of pods and their CPU utilization
 
-Kubernetes by default does not come with any monitoring agent but metric servers can be used and other resources  
-such as Prometheus.
-- You can have one metric server per cluster, the metric server retrieves metrics from pods and nodes  
- and stores them in memory. It does not store the metric in the disk so you can not store see historical metric.
+## APPLICATION LIFECYCLE MANAGEMENT:
 
-You can clone the metric server from the github repo and run it. 
-cluster performance can be seen by running  
-
-kubectl top node 
-kubectl top pods
-
-managing application logs: 
-  When you run a container in a pod, you can stream the logs by running the  
-   kubectl logs -f <podname>
-in the case of multi-container pods, you need to specify the name of the container individually.
-
-APPLICATION LIFECYCLE MANAGEMENT:
-=================================
-## 1. Rolling Update and rollback:
+## 1. *Rolling Update and rollback:*
   when you first create a deployment, it triggers a rollout which can be rev 1
   later when the image is updated, a new rollout is made called rev2
   to see the status of the rollout, run the  
@@ -1653,7 +1631,7 @@ APPLICATION LIFECYCLE MANAGEMENT:
 
 there are two types of deployment strategies.
 
-## 2. RECREATE:
+## 2. *RECREATE:*
 - You can delete the existing deployment and then make a new deployment with the newer version
 - This will lead to app downtime. this is not the k8s default strategy.
   
@@ -1676,8 +1654,8 @@ kubectl rollout history deployment/myapp-deployment
 kubectl rollout undo deployment/app 
 ```
 
-Multi Container PODS:
-=====================
+## Multi Container PODS:
+
 the idea of decoupling a large mom=nolithic application into small components called microservices,
 allows us to deploy a set of small independent and reusable code. This setup allows us to manage, or update only,
 small portions of the app instead of the entire app. It might require running two apps or components in the same  
@@ -1727,10 +1705,33 @@ spec:
     image: busybox
     command: ['sh', '-c', 'git clone <some-repository-that-will-be-used-by-application> ;']
 ```
-CLUSTER MAINTENANCE:
-====================
+# LOGGING AND MONITORING:
+
+We can monitor the applications deployed in k8s as well as the Kubernetes cluster.
+to monitor resources in the cluster, we can monitor
+- node level metrics  #number of nodes, healthy, memory performance, CPU utilization
+- pod level metric # number of pods and their CPU utilization
+
+Kubernetes by default does not come with any monitoring agent but metric servers can be used and other resources  
+such as Prometheus.
+- You can have one metric server per cluster, the metric server retrieves metrics from pods and nodes  
+ and stores them in memory. It does not store the metric in the disk so you can not store see historical metric.
+
+You can clone the metric server from the github repo and run it. 
+cluster performance can be seen by running  
+
+kubectl top node 
+kubectl top pods
+
+managing application logs: 
+  When you run a container in a pod, you can stream the logs by running the  
+   kubectl logs -f <podname>
+in the case of multi-container pods, you need to specify the name of the container individually.
+
+# CLUSTER MAINTENANCE:
+
 This is important to know how and when to upgrade a cluster, and how to understand disaster recovery.
-### 1. OS UPGRADE:
+### 1. *OS UPGRADE:*
   To take down nodes in the cluster for updates or security patches on the node. When a node hosting the pods goes down,
   all the pods will not be accessible to users. Except there were replicas of that pod on another node.
   If the node lasts less than 5 minutes, the pods can be rescheduled, but if it exceeds 5 minutes, the controller will  
@@ -1755,7 +1756,7 @@ This is important to know how and when to upgrade a cluster, and how to understa
   nevertheless, you can use  --force flag to force delete the pod. This will permanently delete the pod on that node  
   and will not recreate it on another node because it was not part of a ReplicaSet.
 
-### 2. Cluster Upgrade:
+### 2. *Cluster Upgrade:*
   Kubernetes is released in version and there are minor versions such as the alpha and beta versions before a more stable 
   release is made.
   None of the cluster components can be of a version higher than the API Server, except for the kubelet service.
@@ -1792,7 +1793,7 @@ the kubelet service must be upgraded manually
 apt-get upgrade kubelete=v1.12.0-00
 systemctl restart kubelet.service
 ```
-### 3. Node Upgrade:
+### 3. *Node Upgrade:*
 
   https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/upgrading-linux-nodes/
 
@@ -1810,34 +1811,35 @@ systemctl restart kubelet.service
 
   ssh <nodename>
 
-BACKUP AND RESTORE:
-===================
-With respect to resources, declarative approaches can be used to save your configuration files. A good practice is to save
+# BACKUP AND RESTORE:
+
+Concerning resources, declarative approaches can be used to save your configuration files. A good practice is to save
 these codes in a source code repo like GitHub. But if an object is created imperatively, it will be difficult to keep track.
 therefore, the KubeAPI server is a place to get all created resources.
 All resource configurations are saved in the kube-apiserver
-
-1. kubectl get all --all-namespaces -o yaml > all-deploy.yaml
-
-there are tools like VELERO that can help in taking backups of the cluster.
+```sh
+ kubectl get all --all-namespaces -o yaml > all-deploy.yaml
+```
++ There are tools like VELERO that can help in taking backups of the cluster.
 
 The ETCD stores information about the state of the cluster.
-So you can choose to backup the etcd cluster itself. it is found in the controlplane
+So you can choose to backup the etcd cluster itself. it is found in the control-plane
 data is stored in the data directory.
 it also comes with the built-in snapshot utility
-
+```sh
 etcdctl snapshot save snapshot.db
 etcdctl snapshot status snapshot.db
+```
 
-
-A snapshot directory is created. To restore the cluster from this backup, stop the kubeapi server and run the  
-
++ A snapshot directory is created. To restore the cluster from this backup, stop the kubeapi server and run the  
+```sh
 etcdctl snapshot restore snapshot.db --data-dir /var/lib/etcd-from-backup
 systemctl daemon-reload
 service kube-apiserver start
-
+```
+```sh
 k logs etcd-controlplane -n kube-system | grep -i 'etcd-version'
-
+```
 
 ls /etc/kubernetes/manifest
 k edit etcd.yaml
@@ -1849,7 +1851,7 @@ ETCDCTL_API=3 etcdctl snapshot save --endpoint= \
 --key= \
 /opt/snapshot-pre-boot.db  #location to save backup
 
-to restore the original state of the cluster using the backup file, you can use the etcd restore <filename>
++ to restore the original state of the cluster using the backup file, you can use the etcd restore <filename>
 
 
 etcdctl snapshot restore --data-dir /var/lib/etcd-from-backup /opt/snapshot-pre-boot.db 
