@@ -342,7 +342,7 @@ spec:
         name: fluentd-elasticsearch
     spec:
       tolerations:
-      # these tolerations are to have the daemonset runnable on control plane nodes
+      # These tolerations are to have the daemonset runnable on control plane nodes
       # remove them if your control plane nodes should not run pods
       - key: node-role.kubernetes.io/control-plane
         operator: Exists
@@ -395,7 +395,7 @@ placed under its management since there could be multiple pods running in the cl
  kubectl edit pod/rs/rc/deploy <podname>
 ```
 
-## Services, Load balancing and Networking:
+# SERVICE DISCOVERY
 + Pods in a cluster have a unique cluster-wide IP, acting like separate VMs
 + Pods can communicate with all other Pods without NAT
 + Kubernetes service enables communication between various components within and outside the application and between other applications and users.
