@@ -726,9 +726,14 @@ The reclaim policy for a PersistentVolume tells the cluster what to do with the 
 + Delete
 
  # SECURITY:
+Security in Kubernetes is mainly in the area of 
+* Securing the configurable cluster components
+* Securing the applications that run in the cluster
+
 ![4c](https://github.com/CHAFAH/DevOps_Setup/assets/125821852/eee2926b-6e4a-4e4a-ba70-36b6c2cc4fff)
 
- 
+ * Authentication
+ * Authorization
 # NAMESPACES:
 
   A namespace is simply a distinct working area in k8s where a defined set of resources rules and users can  
