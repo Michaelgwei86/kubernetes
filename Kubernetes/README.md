@@ -492,8 +492,8 @@ The container is recreated in a clean state and all volumes I lost
 + These persistent volumes can be a directory that can be used by Pods or shared by containers running in a Pod
 
 ## Types of Volumes:
-### 1. **ConfigMaps:*
-===========
+### 1. *ConfigMaps:*
+
 + A ConfigMap provides a way to inject configuration data into pods.
 + This is a way of managing environmental variables in k8s. you can manually inject this variable by passing them as env.
 + But with many def files that require this variable, then you need to create them as a separate object in k8s 
@@ -555,7 +555,7 @@ volumes:
   ConfigMap:
     name: app-config
 
-emptyDir:
+### 2. *emptyDir:*
 =========
 + An emptyDir volume is created when the Pod is assigned to a node, the emptyDir volume is initially empty
 + All containers in the Pod can read and write the same files in the emptyDir volume, 
@@ -580,8 +580,8 @@ spec:
       sizeLimit: 500Mi
 ```
 
-hostPath:
-==========
+### 3. *hostPath:*
+
 + A hostPath volume mounts a file or directory from the host node's filesystem into your Pod. #It is risky
 + This is not something that most Pods will need, but it offers a powerful escape hatch for some applications.
 
@@ -612,7 +612,7 @@ spec:
       path: /data/foo # directory location on host
       type: Directory # This field is optional
 ```
-SECRETS:
+### 4. *SECRETS:*
 ========
 Secrets just like configmaps are used to store configuration data which can be injected into an object in k8s.
 Unlike configmaps, secrets store sensitive data such as passwords and keys in an encoded manner.
@@ -651,16 +651,16 @@ data:
   DB_Password: sffvnhri
 ```
 copy the corresponding encoded values and replace and inject them into the file.
-
+```sh
 kubectl get secrets app-secret
 kubectl describe secrets
 kubectl get secrets app-secret -o yaml
-
-to decode encoded values use the  
+```
++ to decode encoded values use the  
 ```sh
 echo -n 'djvfjdo=' | base64 --decode
 ```
-to inject encoded values into the pod object, use the 
++ To inject encoded values into the pod object, use the 
 ```sh
 apiVersion: v1
 kind: Pod
@@ -676,15 +676,17 @@ spec:
       - secretRef:
         name: app-secret
 ```
-Secrets are not encrypted but rather encoded and can be decoded using the same method. Therefore, do not upload your
-secret files to the GitHub repo.
++ Secrets are not encrypted but rather encoded and can be decoded using the same method. 
++ Therefore, do not upload your secret files to the GitHub repo.
 
 You can enable encryption at rest:
 ```sh
 kubectl get secrets --all-namespaces -o jason | kubectl replace -f -
 ```
 https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
-## PersistentVolume (PV)
+
+## i. *PersistentVolume (PV)*
+
 + A PersistentVolume (PV) is a piece of storage in the cluster that has been provisioned by an administrator
 + PVs are volume plugins like Volumes, but have a lifecycle independent of any individual Pod that uses the PV
 ```sh
@@ -703,7 +705,7 @@ spec:
   hostPath:
     path: "/mnt/data"
 ```
-## PersistentVolumeClaim (PVC)
+## ii. *PersistentVolumeClaim (PVC)*
 + A PersistentVolumeClaim (PVC) is a request for storage by a user. 
 + Pods consume node resources and PVCs consume PV resources.
 + While Pods can request specific levels of resources (CPU and Memory), Claims can request specific size and access modes (e.g., they can be mounted ReadWriteOnce, ReadOnlyMany, ReadWriteMany, or ReadWriteOncePod,)
@@ -743,18 +745,18 @@ kubectl create role dev --ns dev
 kubectl create roleBinding dev --role=dev --serviceAccount=development:dev
 ```
 
-# HOW TO ISSUE A CERTIFICATE TO A USER IN THE CLUSTER:
+## HOW TO ISSUE A CERTIFICATE TO A USER IN THE CLUSTER:
 + A few steps are required to get a normal user to be able to authenticate and invoke an API. 
 + First, this user must have a certificate issued by the Kubernetes cluster, and then present that certificate to the Kubernetes API.
 
-## 1. Create private key
+### 1. Create private key
 The following scripts show how to generate PKI private key and CSR. It is important to set CN and O attribute of the CSR.
  CN is the name of the user and O is the group that this user will belong to. You can refer to RBAC for standard groups.
 ```sh
 openssl genrsa -out myuser.key 2048
 openssl req -new -key myuser.key -out myuser.csr -subj "/CN=myuser"
 ```
-## 2. Create a CertificateSigningRequest
+### 2. Create a CertificateSigningRequest
 + Create a CertificateSigningRequest and submit it to a Kubernetes Cluster via kubectl. Below is a script to generate the CertificateSigningRequest.
 ```sh
 cat <<EOF | kubectl apply -f -
@@ -780,18 +782,18 @@ EOF
 ```sh
 cat myuser.csr | base64 | tr -d "\n"
 ```
-## 3. Approve the CertificateSigningRequest
+### 3. Approve the CertificateSigningRequest
 + Use kubectl to create a CSR and approve it.
 
 + Get the list of CSRs:
 ```sh
 kubectl get csr
 ```
-## 4. Approve the CSR:
+### 4. Approve the CSR:
 ```sh
 kubectl certificate approve myuser
 ```
-## 5. Get the certificate
+### 5. Get the certificate
 
 + Retrieve the certificate from the CSR:
 ```sh
@@ -799,11 +801,11 @@ kubectl get csr/myuser -o yaml
 ```
 + The certificate value is in Base64-encoded format under status.certificate.
 
-## 6. Export the issued certificate from the CertificateSigningRequest.
+### 6. Export the issued certificate from the CertificateSigningRequest.
 ```sh
 kubectl get csr myuser -o jsonpath='{.status.certificate}'| base64 -d > myuser.crt
 ```
-## 7. Create Role and RoleBinding
+### 7. Create Role and RoleBinding
 + With the certificate created it is time to define the Role and RoleBinding for this user to access Kubernetes cluster resources.
 
 + This is a sample command to create a Role for this new user:
@@ -814,14 +816,14 @@ kubectl create role developer --verb=create --verb=get --verb=list --verb=update
 ```sh
 kubectl create rolebinding developer-binding-myuser --role=developer --user=myuser
 ```
-## 8. Add to kubeconfig
+### 8. Add to kubeconfig
 + The last step is to add this user into the kubeconfig file.
 
 + First, you need to add new credentials:
 ```sh
 kubectl config set-credentials myuser --client-key=myuser.key --client-certificate=myuser.crt --embed-certs=true
 ```
-## 9. Then, you need to add the context:
+### 9. Then, you need to add the context:
 ```sh
 kubectl config set-context myuser --cluster=kubernetes --user=myuser
 ```
@@ -838,7 +840,8 @@ kubectl config use-context myuser
  ## Authorization
  + After being authenticated into a k8s cluster, all API requests made by an authenticated user in the cluster must be authorized by the API server against all objects and processes
  + Permissions in the cluster to make API calls are denied by default
- + The API request attributes being authorized are either the user, group, resource, verb, namespace path etc
+ + The API request attributes being authorized are either the user, group, resource, verb, namespace path, etc
+ + 
 ### Authorization Modes
 ### Node
 + Grant special permissions to the kubelet based on the pods they are scheduled to run
@@ -950,7 +953,6 @@ ip route add 192.168.2.0/24 via 192.168.1.1
 - You can also set a default router that routes r=traffic through that IP to the internet
 
 ## DNS:
-   ====
 To communicate with different devices and different networks, instead of calling their IP addresses, you can assign a name   
 to that IP which is called name resolution.
 
@@ -988,7 +990,7 @@ nslookup www.google.com
 it only queries names from the DNS.
 
 ## Network Namespaces
-    ==========
+    
 - when you run the ps aux in a container deployed in a namespace, it lists the PID of the container as isolated with PID=1 
 - when u run the ps aux on the host, it lists several processes running in the system including the container process.
 - You can create a container with a network NameSpace that shields the container from the network-related information of the host.
@@ -1001,7 +1003,7 @@ ip -n red addr add 196.168.15.1 dev veth-red # to assign an ip to a namespace
 
 - to connect the red and the blue namespaces, run the 
 ip link veth-red type veth peer name veth-blue
-- to attach the two interfaces together, run the 
+- to attach the two interfaces, run the 
 ip link set veth-red netns red  
 - assign ip to the NameSpace
 ip -n red addr add 196.168.15.1 dev veth-red
@@ -1037,7 +1039,7 @@ ip addr add 192.168.12.5/24 dev v-net-0
    we can add a route entry in the namespace to route traffic to the host ip.
 
 ## DOCKER NETWORK:
-     ==============
+    
 - When you create a docker container, you can specify a network for the container to run on.
 docker run nginx --image=mginx --network none
 - this container will not be accessible within or outside.
@@ -1051,7 +1053,7 @@ docker creates an interface that attaches the container to the bridge network.
 - the container is also assigned an IP  
 
 ## Port Mapping:
--------------
+
   - Since the container is on a private network, it can only communicate to another container on the host and not be accessed externally.
   - But the host has an internet gateway that allows traffic to the internet.
   - Therefore, a port is opened on the host that allows traffic from the container to pass through the host.
@@ -1074,7 +1076,7 @@ iptables etcd-versionl -  t nat
 
 
 ## CONTAINER NETWORKING INTERFACE:
-    ===============================
+   
 
 bridge add sf565f6s+6f /var/run/netns/sf565f6s+6f
 
@@ -1082,8 +1084,7 @@ this is an easier way to add a container to a container through a set standard o
 CNI defines a plugin for how containers have to communicate.
 
 ## CLUSTER NETWORKING:
-   ===================
-
+  
 - each node must have at least one interface connected to a network.
 - Each network must have an address configured.
 - the host must have a unique hostname and a unique mac address.
@@ -1105,7 +1106,7 @@ to see the number of established Connections,
 netstat -npa | grep -i etcd | grep -i 2379 | we -1
 
 ## POD NETWORKING:
-   ===============
+  
 
 - There is a network at the level of the nodes and also a network at the level of pods on the nodes to establish communication.
 - It is not provided by default in k8s.
@@ -1129,7 +1130,7 @@ kubectl logs -n kube-system weave-net-mrks # to see the IP set to the pod
 kubectl exec <podname> -- ip route # to see the default route configured on the pod
 
 ## SERVICE NETWORKING:
-   ===================
+   
 - Pods are rarely configured to communicate with each other directory. they make use of k8s services.
 - When a service is created, it is accessible to all pods on the cluster. it is called ClusterIP.
 - It is used for pods intended to only be accessed within the cluster.
@@ -1151,7 +1152,7 @@ k logs -n kube-system <podname> # to see the proxy configured on the pod
 ```
 
 ## DNS RESOLUTION IN K8S:
-  ======================
+
 
 - k8s objects within a cluster can refer to each other by calling the ip addresses of the objects within thesame namespace.
   If an object is to communicate with another object on the dev namespace, the the name of the object withh be appended by  
@@ -1167,7 +1168,7 @@ curl http://websetvice.dev.svc.cluster.local # fully qualified domain name for t
 + they are deployed as pods. they run the coreDNS executable.
 
 ## KUBERNETES INGRESS:
-   ===================
+   
 + Scenario:
   - You deploy a web app as a pod to host an online store called a store.
   - A database is also deployed to write data from the store app.
@@ -1198,7 +1199,7 @@ As the company grows you want to add a video app to the store but as a separate 
 - specify a set of rules to specify ingress   # INGRESS RESOURCES
 
 ## Ingress Controller:
-    ===================
+   
 
 They are created using a definition file. the cluster doesn't come with an ingress  controller.
 - To deploy ingress, use any of  GCP HTTP LB  OR NGINX   # Supported and maintained by K8S
@@ -1286,7 +1287,7 @@ metadata:
    manage the different app 
 
 ## Ingress Resources:
-   ==================
+   
 - An ingress resource is a set of rules applied to the ingress controller.
 - Here you can specify that if a user inputs a name, route them to the store etc.
 
@@ -1371,7 +1372,7 @@ https://kubernetes.io/docs/concepts/services-networking/ingress
 https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types    
 
 
-# NAMESPACES:
+### NAMESPACES:
 
   A namespace is simply a distinct working area in k8s where a defined set of resources rules and users can  
   be assigned to a namespace. 
@@ -1482,7 +1483,6 @@ there is the last applied file that provides details about the last image of the
 
 
 SCHEDULING:
-============
 
 - there is a builtin scheduler in the cluster control-plane, that scans through nodes in the cluster and schedules
   pods on nodes based on several factors such as resources,
