@@ -774,14 +774,14 @@ kubectl create roleBinding dev --role=dev --serviceAccount=development:dev
 The following scripts show how to generate PKI private key and CSR. It is important to set CN and O attribute of the CSR.
  CN is the name of the user and O is the group that this user will belong to. You can refer to RBAC for standard groups.
 ```sh
-openssl genrsa -out myuser.key 2048
-openssl req -new -key myuser.key -out myuser.csr -subj "/CN=myuser"
+openssl genrsa -out prince.key 2048
+openssl req -new -key prince.key -out prince.csr -subj "/CN=myuser"
 ```
 ```sh
-openssl genrsa -out myuser.key 2048
+openssl genrsa -out prince.key 2048
 touch /root/.rnd
 chmod 600 /root/.rnd
-openssl req -new -key myuser.key -out myuser.csr -subj "/CN=myuser"
+openssl req -new -key prince.key -out prince.csr -subj "/CN=prince"
 ```
 ### 2. Create a CertificateSigningRequest
 + Create a CertificateSigningRequest and submit it to a Kubernetes Cluster via kubectl. Below is a script to generate the CertificateSigningRequest.
@@ -790,7 +790,7 @@ cat <<EOF | kubectl apply -f -
 apiVersion: certificates.k8s.io/v1
 kind: CertificateSigningRequest
 metadata:
-  name: myuser
+  name: prince
 spec:
   request: #(base64 encoded value of the CSR file content)
   signerName: kubernetes.io/kube-apiserver-client
@@ -807,7 +807,7 @@ EOF
 
 + request is the base64 encoded value of the CSR file content. You can get the content using this command:
 ```sh
-cat myuser.csr | base64 | tr -d "\n"
+cat prince.csr | base64 | tr -d "\n"
 ```
 ### 3. Approve the CertificateSigningRequest
 + Use kubectl to create a CSR and approve it.
@@ -818,19 +818,19 @@ kubectl get csr
 ```
 ### 4. Approve the CSR:
 ```sh
-kubectl certificate approve myuser
+kubectl certificate approve prince
 ```
 ### 5. Get the certificate
 
 + Retrieve the certificate from the CSR:
 ```sh
-kubectl get csr/myuser -o yaml
+kubectl get csr/prince -o yaml
 ```
 + The certificate value is in Base64-encoded format under status.certificate.
 
 ### 6. Export the issued certificate from the CertificateSigningRequest.
 ```sh
-kubectl get csr myuser -o jsonpath='{.status.certificate}'| base64 -d > myuser.crt
+kubectl get csr prince -o jsonpath='{.status.certificate}'| base64 -d > prince.crt
 ```
 ### 7. Create Role and RoleBinding
 + With the certificate created it is time to define the Role and RoleBinding for this user to access Kubernetes cluster resources.
@@ -841,22 +841,22 @@ kubectl create role developer --verb=create --verb=get --verb=list --verb=update
 ```
 + This is a sample command to create a RoleBinding for this new user:
 ```sh
-kubectl create rolebinding developer-binding-myuser --role=developer --user=myuser
+kubectl create rolebinding developer-binding-prince --role=developer --user=prince
 ```
 ### 8. Add to kubeconfig
 + The last step is to add this user into the kubeconfig file.
 
 + First, you need to add new credentials:
 ```sh
-kubectl config set-credentials myuser --client-key=myuser.key --client-certificate=myuser.crt --embed-certs=true
+kubectl config set-credentials prince --client-key=prince.key --client-certificate=myuser.crt --embed-certs=true
 ```
 ### 9. Then, you need to add the context:
 ```sh
-kubectl config set-context myuser --cluster=kubernetes --user=myuser
+kubectl config set-context prince --cluster=kubernetes --user=prince
 ```
-+ To test it, change the context to myuser:
++ To test it, change the context to princer:
 ```sh
-kubectl config use-context myuser
+kubectl config use-context prince
 ```
 ```sh
 kubectl config current-context
@@ -881,13 +881,13 @@ https://kubernetes.io/docs/reference/access-authn-authz/abac/
 + Rights are granted to users through the use of policies that combine attributes.
 + The policies can use any type of attribute (user, resource, object, environment, etc)
 #Examples
-+ Alice can do anything to all resources:
++ Mysuer can do anything to all resources:
 ```sh
-{"apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": {"user": "alice", "namespace": "*", "resource": "*", "apiGroup": "*"}}
+{"apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": {"user": "prince", "namespace": "*", "resource": "*", "apiGroup": "*"}}
 ```
 + Bob can just read pods in namespace "projectCaribou":
 ```sh
-{"apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": {"user": "bob", "namespace": "projectCaribou", "resource": "pods", "readonly": true}}
+{"apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": {"user": "prince", "namespace": "projectCaribou", "resource": "pods", "readonly": true}}
 ```
 ### RBAC
 https://kubernetes.io/docs/reference/access-authn-authz/rbac/
@@ -912,7 +912,7 @@ rules:
   verbs: ["get", "watch", "list"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-# This role binding allows "jane" to read pods in the "default" namespace.
+# This role binding allows "prince" to read pods in the "default" namespace.
 # You need to already have a Role named "pod-reader" in that namespace.
 kind: RoleBinding
 metadata:
@@ -921,7 +921,7 @@ metadata:
 subjects:
 # You can specify more than one "subject"
 - kind: User
-  name: jane # "name" is case sensitive
+  name: prince # "name" is case sensitive
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   # "roleRef" specifies the binding to a Role / ClusterRole
