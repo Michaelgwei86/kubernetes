@@ -854,7 +854,7 @@ kubectl config set-credentials prince --client-key=prince.key --client-certifica
 ```sh
 kubectl config set-context prince --cluster=kubernetes --user=prince
 ```
-+ To test it, change the context to princer:
++ To test it, change the context to prince:
 ```sh
 kubectl config use-context prince
 ```
@@ -862,7 +862,9 @@ kubectl config use-context prince
 kubectl config current-context
 
 ```
-
+```sh
+kubectl auth can-i list pods --namespace dev --as prince
+```
 + If you install Kubernetes with kubeadm, most certificates are stored in /etc/kubernetes/pki.
   https://kubernetes.io/docs/setup/best-practices/certificates/
 + You can manage Kubeadm certificates here
