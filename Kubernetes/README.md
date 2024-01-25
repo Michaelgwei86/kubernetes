@@ -777,6 +777,12 @@ The following scripts show how to generate PKI private key and CSR. It is import
 openssl genrsa -out myuser.key 2048
 openssl req -new -key myuser.key -out myuser.csr -subj "/CN=myuser"
 ```
+```sh
+openssl genrsa -out myuser.key 2048
+touch /root/.rnd
+chmod 600 /root/.rnd
+openssl req -new -key myuser.key -out myuser.csr -subj "/CN=myuser"
+```
 ### 2. Create a CertificateSigningRequest
 + Create a CertificateSigningRequest and submit it to a Kubernetes Cluster via kubectl. Below is a script to generate the CertificateSigningRequest.
 ```sh
@@ -851,6 +857,10 @@ kubectl config set-context myuser --cluster=kubernetes --user=myuser
 + To test it, change the context to myuser:
 ```sh
 kubectl config use-context myuser
+```
+```sh
+kubectl config current-context
+
 ```
 
 + If you install Kubernetes with kubeadm, most certificates are stored in /etc/kubernetes/pki.
