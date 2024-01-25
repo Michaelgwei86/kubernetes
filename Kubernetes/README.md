@@ -723,6 +723,26 @@ spec:
     requests:
       storage: 3Gi
 ```
+```sh
+apiVersion: v1
+kind: Pod
+metadata:
+  name: task-pv-pod
+spec:
+  volumes:
+    - name: task-pv-storage
+      persistentVolumeClaim:
+        claimName: task-pv-claim
+  containers:
+    - name: task-pv-container
+      image: nginx
+      ports:
+        - containerPort: 80
+          name: "http-server"
+      volumeMounts:
+        - mountPath: "/usr/share/nginx/html"
+          name: task-pv-storage
+```
 ## Volume Lifecycle:
 The reclaim policy for a PersistentVolume tells the cluster what to do with the volume after it has been released of its claim
 + Recycle
