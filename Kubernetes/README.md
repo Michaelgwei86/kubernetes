@@ -393,6 +393,7 @@ placed under its management since there could be multiple pods running in the cl
 ```
 
 # SERVICE DISCOVERY
+https://kubernetes.io/docs/concepts/services-networking/service/
 + Pods in a cluster have a unique cluster-wide IP, acting like separate VMs
 + Pods can communicate with all other Pods without NAT
 + Kubernetes service enables communication between various components within and outside the application and between other applications and users.
@@ -439,7 +440,7 @@ the service can be accessed by other pods in the cluster using the service name 
 + The k8s service maps a port on the Node to a port on the Pod(target)
 + The NodePort is a port range on the Node that gives external access. it ranges from 30000-32767
 + If you set the type field to NodePort, the Kubernetes control plane allocates a port from a range specified by --service-node-port-range flag (default: 30000-32767)
-
+```sh
 apiVersion: v1
 kind: Service
 metadata: 
@@ -453,14 +454,15 @@ spec:
   selector:
     app: myapp # This is the label that was used in the deployment metadata section
     type: front-end
-
+```
+```sh
 kubectl create -f <filename>
 kubectl get svc 
 curl IP:30008
-
+```
 - In the case of multiple pods running the same application, you need to maintain the labels and selector section with
 the same values. the service uses a random algorithm to route traffic to all pods with that same label.
-- If the pods are running on different nodes in the cluster, you can access it by calling the IP of any node in the  
+- If the pods are running on different nodes in the cluster, you can access them by calling the IP of any node in the  
 cluster. Service is a cluster-wide resource in k8s.
 
 ### 3. *LoadBalancer*:
@@ -505,9 +507,6 @@ kubectl create configmap <ConfigName> --from-literal=APP_COLOR=blue \
 kubectl create configmap app-config --from-file=<pathtofile>
 ```
 ```sh
-APP_COLOR: blue 
-APP_MODE: prod
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
