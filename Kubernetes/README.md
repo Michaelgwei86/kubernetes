@@ -264,7 +264,7 @@ k get pods
 + Stable, persistent storage.
 + Ordered, graceful deployment and scaling.
 + Ordered, automated rolling updates.
-
+https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/
 ```sh
 apiVersion: v1
 kind: Service
@@ -285,18 +285,16 @@ kind: StatefulSet
 metadata:
   name: web
 spec:
+  serviceName: "nginx"
+  replicas: 2
   selector:
     matchLabels:
-      app: nginx # has to match .spec.template.metadata.labels
-  serviceName: "nginx"
-  replicas: 3 # by default is 1
-  minReadySeconds: 10 # by default is 0
+      app: nginx
   template:
     metadata:
       labels:
-        app: nginx # has to match .spec.selector.matchLabels
+        app: nginx
     spec:
-      terminationGracePeriodSeconds: 10
       containers:
       - name: nginx
         image: registry.k8s.io/nginx-slim:0.8
@@ -311,7 +309,6 @@ spec:
       name: www
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      storageClassName: "my-storage-class"
       resources:
         requests:
           storage: 1Gi
