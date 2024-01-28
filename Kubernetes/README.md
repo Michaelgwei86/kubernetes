@@ -106,7 +106,7 @@ spec: # This provides additional information about the object to create. it vari
 +  example:
 ```sh
 apiVersion: v1
-Kind: Pod
+kind: Pod
 metadata:
   name: myapp 
   labels:
@@ -137,7 +137,7 @@ suppose an update has issues, you will want to do a rollback to the previous wor
 
 ```sh
 apiVersion: apps/v1
-Kind: Deployment
+kind: Deployment
 metadata: 
   name: myapp-deployment
   labels:
@@ -211,7 +211,7 @@ spec:
 #This is because it can manage pods that were not created to be managed by the rs
 ```sh
 apiVersion: apps/v1
-Kind: ReplicaSet
+kind: ReplicaSet
 metadata: 
   name: myapp-rc
   labels:
@@ -444,7 +444,7 @@ the service can be accessed by other pods in the cluster using the service name 
 + If you set the type field to NodePort, the Kubernetes control plane allocates a port from a range specified by --service-node-port-range flag (default: 30000-32767)
 
 apiVersion: v1
-Kind: Service
+kind: Service
 metadata: 
   name: myapp-svc
 spec:
@@ -472,7 +472,7 @@ The actual creation of the load balancer happens asynchronously, and information
 K8s have native support for cloud platforms 
 ```sh
 apiVersion: v1
-Kind: Service
+kind: Service
 metadata: 
   name: backend
 spec:
@@ -771,12 +771,8 @@ kubectl create roleBinding dev --role=dev --serviceAccount=development:dev
 + First, this user must have a certificate issued by the Kubernetes cluster, and then present that certificate to the Kubernetes API.
 
 ### 1. Create private key
-The following scripts show how to generate PKI private key and CSR. It is important to set CN and O attribute of the CSR.
+The following scripts show how to generate PKI private key and CSR. It is important to set CN and O attributes of the CSR.
  CN is the name of the user and O is the group that this user will belong to. You can refer to RBAC for standard groups.
-```sh
-openssl genrsa -out prince.key 2048
-openssl req -new -key prince.key -out prince.csr -subj "/CN=myuser"
-```
 ```sh
 openssl genrsa -out prince.key 2048
 touch /root/.rnd
@@ -928,7 +924,7 @@ subjects:
 roleRef:
   # "roleRef" specifies the binding to a Role / ClusterRole
   kind: Role #this must be Role or ClusterRole
-  name: pod-reader # this must match the name of the Role or ClusterRole you wish to bind to
+  name: pod-reader # This must match the name of the Role or ClusterRole you wish to bind to
   apiGroup: rbac.authorization.k8s.io
 ````
 
@@ -1187,8 +1183,8 @@ k logs -n kube-system <podname> # to see the proxy configured on the pod
 ## DNS RESOLUTION IN K8S:
 
 
-- k8s objects within a cluster can refer to each other by calling the ip addresses of the objects within thesame namespace.
-  If an object is to communicate with another object on the dev namespace, the the name of the object withh be appended by  
+- k8s objects within a cluster can refer to each other by calling the ip addresses of the objects within the same namespace.
+  If an object is to communicate with another object on the dev namespace, the name of the object will be appended by  
   the name of the NameSpace.
   curl http://websetvice.dev # the last name of the service is the name of the namespace
 - for each namespace, the dns sercer creates a subdomain for the cluster call dev.
@@ -1233,7 +1229,6 @@ As the company grows you want to add a video app to the store but as a separate 
 
 ## Ingress Controller:
    
-
 They are created using a definition file. the cluster doesn't come with an ingress  controller.
 - To deploy ingress, use any of  GCP HTTP LB  OR NGINX   # Supported and maintained by K8S
 - They are not just LB, they have additional features 
@@ -1275,17 +1270,18 @@ spec:
               containerPort: 80
             - name: https
               containerPort: 443
+```
 ---
 nginx-configmap.yaml
-
+```sh
 kind: ConfigMap
 apiVersion: v1
 metadata:
   name: nginx-configuration
-
+```
 ---
 nginx-ingress-svc.yaml
-
+```sh
 apiVersion: v1
 kind: Service
 metadata:
@@ -1302,9 +1298,10 @@ spec:
       protocol: TCP
       name: https
     selector: nginx-ingress
+```
 ---
 nginx-service-account.yaml
-
+```sh
 kind: ServiceAccount
 apiVersion: v1
 metadata:
@@ -1616,11 +1613,9 @@ Setting appropriate resource requests and limits for pods is crucial for efficie
 within a Kubernetes cluster. Properly configured QoS levels help ensure that critical workloads are prioritized 
 and that the cluster operates smoothly without resource contention issues.
 
-
-
 ## STATIC PODS:
 
-- Without the controlplane which contains the API server, you can store your configuration files at the path 
+- Without the control-plane which contains the API server, you can store your configuration files at the path 
   /etc/kubernetes/manifest,.
 - kubernetes frequently visit this directory and any manifest file here to create pods will create the pod.
 - it can create only pods, another object will need the controlplane
@@ -1877,18 +1872,18 @@ k logs etcd-controlplane -n kube-system | grep -i 'etcd-version'
 ls /etc/kubernetes/manifest
 k edit etcd.yaml
 export ETCDCTL_API=3
-
+```sh
 ETCDCTL_API=3 etcdctl snapshot save --endpoint= \
 --cacert= \
 --cert= \
 --key= \
 /opt/snapshot-pre-boot.db  #location to save backup
+```
++ To restore the original state of the cluster using the backup file, you can use the etcd restore <filename>
 
-+ to restore the original state of the cluster using the backup file, you can use the etcd restore <filename>
-
-
+```sh
 etcdctl snapshot restore --data-dir /var/lib/etcd-from-backup /opt/snapshot-pre-boot.db 
-
+```
 ls /var/lib/etcd-from-backup
 
 vi /etc/kubernetes/manifest/etcd.yaml
