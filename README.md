@@ -168,6 +168,10 @@ Run this on all worker nodes
         --discovery-token-ca-cert-hash sha256:5395b66c9b96156ecda4f35caa8f08e7447e6432f77428fbe0202893e502e61f
 ```
 ```sh
+aws eks --region eu-central-1 update-kubeconfig --name eks-dribe-dev
+```
+
+```sh
 source <(kubectl completion bash) # set up autocomplete in bash into the current shell, bash-completion package should be installed first.
 echo "source <(kubectl completion bash)" >> ~/.bashrc # add autocomplete permanently to your bash shell.
 alias k=kubectl
