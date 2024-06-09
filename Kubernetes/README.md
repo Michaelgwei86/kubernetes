@@ -155,6 +155,7 @@ spec:
         image: nginx:latest
         ports:
         - containerPort: 80
+
 ---
 apiVersion: v1
 kind: Service
@@ -167,7 +168,8 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 80
-  type: NodePort
+  type: LoadBalancer
+
 ```
 ```sh
 kubectl get deployment
