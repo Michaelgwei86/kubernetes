@@ -138,26 +138,36 @@ suppose an update has issues, you will want to do a rollback to the previous wor
 ```sh
 apiVersion: apps/v1
 kind: Deployment
-metadata: 
-  name: myapp-deployment
-  labels:
-    app: myapp 
-    type: front-end
+metadata:
+  name: nginx-deployment
 spec:
-  template:  #Normal Pod template except ApiVersion and Kind
-    metadata:
-      name: myapp
-      labels:
-        app: myapp
-        type: front-end
-    spec:
-      container:
-      - name: nginx-container
-        image: nginx 
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
-      type: front-end # must match .spec.template.metadata.labels, or it will be rejected by the API.
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: NodePort
 ```
 ```sh
 kubectl get deployment
