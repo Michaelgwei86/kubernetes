@@ -13,31 +13,31 @@ Kubernetes was originally developed by Google and is based on their experience r
 **Key Features of Kubernetes**
 Kubernetes offers a robust set of features designed to meet the needs of modern containerized applications:
 
-+ 1. **Scaling**
+### 1. **Scaling**
 
 Kubernetes dynamically adjusts the number of running containers based on demand, ensuring optimal resource utilization. This adaptability helps reduce costs while maintaining a smooth user experience.
 
-**Load Balancing**
+### 2. **Load Balancing**
 
 Load balancing is integral to Kubernetes. It effectively distributes incoming traffic across multiple pods, ensuring high availability and optimal performance and preventing any single pod from becoming overloaded.
 
-**Self-Healing**
+### .3 **Self-Healing**
 
 Kubernetes’ self-healing capabilities minimize downtime. If a container or pod fails, it is automatically replaced, keeping your application running smoothly and ensuring consistent service delivery.
 
-**Service Discovery and Metadata**
+### 4. **Service Discovery and Metadata**
 
 Service discovery is streamlined in Kubernetes, facilitating communication between different application components. Metadata enhances these interactions, simplifying the complexities associated with distributed systems.
 
-**Rolling Updates and Rollbacks**
+### 5. **Rolling Updates and Rollbacks**
 
 Kubernetes supports rolling updates to maintain continuous service availability. If an update causes issues, reverting to a previous stable version is quick and effortless.
 
-**Resource Management**
+### 6. **Resource Management**
 
 Kubernetes allows for precise resource management by letting you define resource limits and requests for pods, ensuring efficient use of CPU and memory.
 
-**ConfigMaps, Secrets, and Environment Variables**
+### 7. **ConfigMaps, Secrets, and Environment Variables**
 
 Kubernetes uses ConfigMaps and Secrets for secure configuration management. These tools help store and manage sensitive information such as API keys and passwords securely, protecting them from unauthorized access.
 
