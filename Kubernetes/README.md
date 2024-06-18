@@ -564,8 +564,8 @@ kind: ConfigMap
 metadata:
   name: app-config
 data:
-  APP_COLOR: blue 
-  APP_MODE: prod
+  APP_COLOR: "blue"
+  APP_MODE: "prod"
 ```
 kubectl get configmaps
 
@@ -575,19 +575,34 @@ to inject the  env to the running container, add the envFrom section under the s
 apiVersion: v1
 kind: Pod
 metadata:
-  name: nginx
+  name: nginx-pod
+  labels:
+    app: nginx
 spec:
   containers:
-  - image: nginx
-    name: nginx
-    ports:
-      - containerPort: 8080
+  - name: nginx
+    image: nginx:latest
     envFrom:
-      - configMapRef:
+    - configMapRef:
         name: app-config
+    ports:
+      - containerPort: 80
 ```
 to create a resource, use kubectl create -f <filename>
 
+```sh
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: nginx
+```
 You can also ref a single env from a configmap 
 
 env:
