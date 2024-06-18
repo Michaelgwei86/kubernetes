@@ -1954,5 +1954,6 @@ vi /etc/kubernetes/manifest/etcd.yaml
 edit the Hostpath and add /var/etcd-from-backup
 
 
-*NOTE*
+*NOTE*:
+
 https://www.hostinger.com/tutorials/kubernetes-tutorial?utm_campaign=Generic-Tutorials-DSA|NT:Se|LO:Other-EU&utm_medium=ppc&gad_source=1&gclid=Cj0KCQjw4MSzBhC8ARIsAPFOuyVhED0cRJ2C0zKzYeGg4fjnBEnixImC46C2Mn5efFZ5INqNKIBVfEoaAvHxEALw_wcB
