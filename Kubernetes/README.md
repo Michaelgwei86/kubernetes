@@ -2,7 +2,7 @@
   **https://www.linkedin.com/in/prince-chafah-forchu-sani-691534158/**
   # KUBERNETES:
  
-## Introduction
+## **INTRODUCTION**
 
 Kubernetes (often abbreviated as K8s) is an open-source platform designed to automate the deployment, scaling, and operation of containerized applications. It provides a robust framework to run distributed systems resiliently, managing the complexity of microservice architectures and ensuring that containerized applications run smoothly in various environments, from local development to large-scale production.
 
