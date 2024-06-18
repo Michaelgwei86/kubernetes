@@ -546,6 +546,8 @@ The container is recreated in a clean state and all volumes I lost
 
 + A ConfigMap provides a way to inject configuration data into pods.
 + This is a way of managing environmental variables in k8s. you can manually inject this variable by passing them as env.
++ The most critical role that ConfigMaps play is making applications portable by separating the application code from configuration settings.
++ This separation makes it possible to efficiently migrate from a development environment to a test environment and, eventually, a production environment.
 + But with many def files that require this variable, then you need to create them as a separate object in k8s 
 and simply reference them in your object definition file. This can be done using ConfigMaps and Secrets.
 
