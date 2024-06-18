@@ -66,18 +66,17 @@ Kubernetes uses ConfigMaps and Secrets for secure configuration management. Thes
          ReplicationController
  ## Node Components:
  
-  + 1. **kubelet**: 
-    The Kubelet is responsible for managing and ensuring the running of containers created by Kubernetes. communicate with control-plane 
-  it registers nodes into the cluster. It monitors nodes and pods in the cluster every 10 minutes and 
-  relates feedback to the API which is stored in the etcd.cluster
-  + 2. **container runtime**:
-    A fundamental component that empowers Kubernetes to run containers effectively. It is responsible for managing the execution and lifecycle of containers within the Kubernetes environment.
+1. **kubelet:** 
++ The Kubelet is responsible for managing and ensuring the running of containers created by Kubernetes. communicate with control-plane
++ it registers nodes into the cluster. It monitors nodes and pods in the cluster every 10 minutes and  relates feedback to the API which is stored in the etcd.cluster
+2. **container runtime:**
++ A fundamental component that empowers Kubernetes to run containers effectively. It is responsible for managing the execution and lifecycle of containers within the Kubernetes environment.
    [Container-d] docker pulling containered images
-  + 3. **kube-proxy**: 
-    enables network communication and load balancing between pods and services within the cluster.
-  every pod in a cluster can communicate with other pods in the cluster by using IP address of the pod.
-  to access each pod, a service has to be created and then you can access the pod by using the service name.
-  the service is not an object, the kube-proxy creates rules that allow traffic routing within the cluster.
+3. **kube-proxy:**
++ enables network communication and load balancing between pods and services within the cluster.
++ every pod in a cluster can communicate with other pods in the cluster by using IP address of the pod.
++ to access each pod, a service has to be created and then you can access the pod by using the service name.
++ the service is not an object, the kube-proxy creates rules that allow traffic routing within the cluster.
 
          ClusterIP
          NodePort
