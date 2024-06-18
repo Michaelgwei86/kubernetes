@@ -10,7 +10,7 @@ Kubernetes (often abbreviated as K8s) is an open-source platform designed to aut
 
 Kubernetes was originally developed by Google and is based on their experience running containerized applications in production. Google introduced Kubernetes as an open-source project in 2014. It is written in Go and has since become one of the most popular container orchestration platforms. The project is now maintained by the Cloud Native Computing Foundation (CNCF), which has fostered its growth and adoption across the industry.
 
-**Key Features of Kubernetes**
+## **Key Features of Kubernetes**
 Kubernetes offers a robust set of features designed to meet the needs of modern containerized applications:
 
 ### 1. **Scaling**
