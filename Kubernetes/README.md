@@ -44,7 +44,7 @@ Kubernetes uses ConfigMaps and Secrets for secure configuration management. Thes
 
 
 **KUBERNETES INSTALLATION:**
-
+[Install Kuelete on Windows](https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/)
 [Install Kubeadm](https://github.com/HILL-TOPCONSULTANCY/kubernetes/blob/main/README.md)
 
 ## KUBERNETES ARCHITECTURE:
