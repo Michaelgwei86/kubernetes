@@ -150,16 +150,29 @@ spec: # This provides additional information about the object to create. it vari
 apiVersion: v1
 kind: Pod
 metadata:
-  name: myapp 
+  name: nginx-pod
   labels:
-    app: myapp
-    type: front-end
+    app: nginx
 spec:
-  container:
-  - name: nginx-container
-    image: nginx
+  containers:
+  - name: nginx
+    image: nginx:latest
     ports:
     - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-loadbalancer-service
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+
 ```
 ```sh
 - kubectl apply/create -f <filename> #to create declaratively from a yml file
