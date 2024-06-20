@@ -1,7 +1,8 @@
   **Author: Prince Chafah Forchu Sani**
+  
   [Profile](https://www.linkedin.com/in/prince-chafah-forchu-sani-691534158/)
   # KUBERNETES:
- [Install kubectl](https://kubernetes.io/docs/tasks/tools/)
+
 ## **INTRODUCTION**
 
 Kubernetes (often abbreviated as K8s) is an open-source platform designed to automate the deployment, scaling, and operation of containerized applications. It provides a robust framework to run distributed systems resiliently, managing the complexity of microservice architectures and ensuring that containerized applications run smoothly in various environments, from local development to large-scale production.
@@ -44,7 +45,7 @@ Kubernetes uses ConfigMaps and Secrets for secure configuration management. Thes
 
 **KUBERNETES INSTALLATION:**
 
-https://github.com/HILL-TOPCONSULTANCY/kubernetes/blob/main/README.md
+[Install Kubeadm](https://github.com/HILL-TOPCONSULTANCY/kubernetes/blob/main/README.md)
 
 ## KUBERNETES ARCHITECTURE:
 
