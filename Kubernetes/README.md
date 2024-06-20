@@ -42,7 +42,7 @@ Kubernetes allows for precise resource management by letting you define resource
 Kubernetes uses ConfigMaps and Secrets for secure configuration management. These tools help store and manage sensitive information such as API keys and passwords securely, protecting them from unauthorized access.
 
 
-##KUBERNETES INSTALLATION:
+**KUBERNETES INSTALLATION:**
 
 https://github.com/HILL-TOPCONSULTANCY/kubernetes/blob/main/README.md
 
