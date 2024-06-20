@@ -51,12 +51,12 @@ Kubernetes uses ConfigMaps and Secrets for secure configuration management. Thes
 
 ### ControlPlane: MasterNode
      
- 1. **ApiServer:**
+1. **ApiServer:**
     + Primary mgnt component/ exposes k8s API serving as frontend interface for all cluster operations, handles restful Api from kubelet
     + When you run a kubectl command, it communicates with the kube API and then it gets the data from the ETCD
     + The request is first authenticated and then validated.
 2. **ETCD:**
-    + It is a key-value store, It stores the cluster's configuration data,
+    + It is a key-value store, It stores the cluster's configuration data.
 3 **Scheduler:**
     + Responsible for making decisions about pod placement on worker nodes in the cluster.
     + It examines resource requirements, quality-of-service constraints, affinity, anti-affinity, and other policies to determine the most suitable node for running a pod.
