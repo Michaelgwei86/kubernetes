@@ -45,8 +45,11 @@ Kubernetes uses ConfigMaps and Secrets for secure configuration management. Thes
 
 **KUBERNETES INSTALLATION:**
 1. [Install Kubelet on Windows](https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/)
-2. [Install Kubeadm](https://github.com/HILL-TOPCONSULTANCY/kubernetes/blob/main/README.md)
-3. Creat 3 Ubuntu EC2 Instances of t3 Medium
+2. KOPS
+3. [Install Kubeadm](https://github.com/HILL-TOPCONSULTANCY/kubernetes/blob/main/README.md)
+4. EKS
+5. AKS
+6. Creat 3 Ubuntu EC2 Instances of t3 Medium
 
 ## KUBERNETES ARCHITECTURE:
 
