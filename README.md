@@ -59,7 +59,7 @@ sysctl net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables ne
 ```
 ## Install contairnerd
 
-https://github.com/containerd/containerd/blob/main/docs/getting-started.md
+[Continerd](https://github.com/containerd/containerd/blob/main/docs/getting-started.md)
 ```sh
 https://docs.docker.com/engine/install/ubuntu/
 ```
