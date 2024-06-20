@@ -21,9 +21,9 @@ cd dir
 - vagrant ssh kubemaster
 
 ## Install kubeadm Doc:
-```ss
-  https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
-```
+
+1.  [Install Kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl)
+
 Installing a container runtime:
 Select contairnerd
 
