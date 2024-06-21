@@ -202,6 +202,7 @@ kubectl apply -f nginx-clusterip-service.yaml
 + In creating a deployment, a ReplicaSet and Pod are created in the background
 
 ```sh
+cat <<EOF | sudo tee deploy.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -221,9 +222,10 @@ spec:
         image: nginx:latest
         ports:
         - containerPort: 80
-
----
-cat <<EOF | sudo tee nginx-nodeport-service.yaml
+EOF
+```
+```sh
+cat <<EOF | sudo tee deploy-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -239,6 +241,7 @@ spec:
   type: NodePort
 EOF
 ```
+# Deployment Commands
 ```sh
 kubectl get deployment
 kubectl create deployment --image=nginx nginx --dry-run=client -o yaml
@@ -253,7 +256,7 @@ kubectl get pods
 kubectl describe deployments
 kubectl scale deployment/nginx-deployment --replicas=10
 ```
-### 3. *REPLICASETS:*
+# 3. *REPLICASETS:*
 A ReplicaSet maintains a stable set of replica Pods running at any given time. As such, it is often used to guarantee the availability of a specified number of identical Pods
 Controllers are the brain behind k8s, they monitor k8s objects and respond accordingly.
 - the replication controller helps increase the number of pods in the node for high availability.
@@ -394,7 +397,7 @@ spec:
           storage: 1Gi
 ```
 
-### 5. *DEAMONSETS:*
+# 5. *DEAMONSETS:*
 
 Deamonsets are like replicasets which help you run one instance of pods, but it runs one copy of your pod on every  
 node on the cluster.
@@ -458,7 +461,7 @@ kubectl get daemonsets --all-namespaces
 - one approach is to use the node name to bypass the scheduler and place a pod on a desired node.
   
 
-### Labels and Selectors:
+# Labels and Selectors:
 + Labels are used as filters for ReplicaSet. Labels allow the rs to know what pod in the cluster or nodes 
 placed under its management since there could be multiple pods running in the cluster.
 + The template definition section is required in every rs, even for pods that were created before the rs 
