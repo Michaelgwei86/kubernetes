@@ -138,3 +138,55 @@ kubectl get pods -o wide -n kube-system
 ```sh
 kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
 ```
+# Install Aliases
+
+```sh
+vi ~/.bashrc
+```
+```sh
+source <(kubectl completion bash) # set up autocomplete in bash into the current shell, bash-completion package should be installed first.
+echo "source <(kubectl completion bash)" >> ~/.bashrc # add autocomplete permanently to your bash shell.
+complete -o default -F __start_kubectl k
+# Kubernetes Aliases
+alias k='kubectl'
+alias kgp='kubectl get pods'
+alias kgs='kubectl get svc'
+alias kgn='kubectl get nodes'
+alias kgd='kubectl get deployment'
+alias kgc='kubectl get configmap'
+alias kgse='kubectl get secret'
+alias kgpoy='kubectl get pod -o yaml'
+alias kgsy='kubectl get svc -o yaml'
+alias kgdy='kubectl get deployment -o yaml'
+alias kgsys='kubectl get service -o yaml'
+alias kaf='kubectl apply -f'
+alias kdf='kubectl delete -f'
+alias kd='kubectl describe'
+alias kl='kubectl logs'
+alias klf='kubectl logs -f'
+alias kex='kubectl exec -it'
+alias kcn='kubectl config set-context --current --namespace'
+alias kcc='kubectl config current-context'
+alias kcuc='kubectl config use-context'
+alias kcd='kubectl config delete-context'
+alias kccd='kubectl config delete-cluster'
+alias kccc='kubectl config current-context'
+alias kdpl='kubectl describe pod'
+alias kdel='kubectl delete'
+alias kdply='kubectl delete deployment'
+alias kdsvc='kubectl delete service'
+alias kdrs='kubectl describe rs'
+alias kdns='kubectl describe namespace'
+alias ksc='kubectl scale'
+alias krn='kubectl run'
+alias kap='kubectl apply'
+alias kdp='kubectl delete pod'
+alias kdse='kubectl describe service'
+alias kctx='kubectl config get-contexts'
+alias ktx='kubectl config use-context'
+alias kdsvc='kubectl delete svc'
+alias kdp='kubectl delete pod'
+```
+```sh
+source ~/.bashrc
+```
