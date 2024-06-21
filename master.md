@@ -127,9 +127,10 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```sh
 kubectl get pods -o wide -n kube-system
 ```
-#You will notice from the previous command, that all the pods are running except one: ‘core-dns’. For resolving this we will install a # pod network addon like Calico or Weavenet ..etc. 
-#Note: Install any one network addon don't install both. Install either weave net or calico.
-#To install Weave network plugin/addon run the following command.
++ You will notice from the previous command, that all the pods are running except one: ‘core-dns’.
++ For resolving this we will install a  pod network addon like Calico or Weavenet ..etc.
++ Note: Install any one network addon don't install both. Install either weave net or calico.
++ To install Weave network plugin/addon run the following command.
 ```sh
 kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
 ```
