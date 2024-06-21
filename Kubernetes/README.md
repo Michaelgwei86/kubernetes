@@ -190,10 +190,10 @@ kubectl apply -f nginx-clusterip-service.yaml
 kubectl get pods -o wide
 kubectl get service -o wide
 ```
-```sh
+
 + Copy the public IPV4 Address og the pod node hosting the pod
 + Access the UI of the application using curl _**http://<public-ip>:<NodePort>**_
-
+```sh
 - kubectl apply/create -f <filename> #to create declaratively from a yml file
 - kubectl get/describe pods <podname> #to get the pod spec
 - kubectl create deployment redis-deployment --image=redis123 --dry-run=client -o yaml > deployment.yaml
