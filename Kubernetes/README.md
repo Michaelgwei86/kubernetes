@@ -129,17 +129,17 @@ kubectl run nginx --image nginx
 ```
 it creates a pod call nginx and also pulls the image nginx from a public docker repo 
 
-apiVersion: # this is the version of the k8s API, it is mandatory Pod: v1 , service: v1 
-#replicaSet: apps/v1 , Deployment: apps/v1. It is also a string value 
-kind: # This refers to the type of object to be created such as Pod, ReplicaSet, Deployment, etc string
-metadata: # This is data about the object such as name and labels. Metadata is a dictionary, it is indented
-   name: myapp #
-   labels: # It is a dictionary and can take any kind of key-value pair such as
-      app: myapp # It is a string
-      type: front-end
+- apiVersion: # this is the version of the k8s API, it is mandatory Pod: v1 , service: v1 
+- #replicaSet: apps/v1 , Deployment: apps/v1. It is also a string value 
+- kind: # This refers to the type of object to be created such as Pod, ReplicaSet, Deployment, etc string
+- metadata: # This is data about the object such as name and labels. Metadata is a dictionary, it is indented
+-   name: myapp #
+-  labels: # It is a dictionary and can take any kind of key-value pair such as
+-      app: myapp # It is a string
+-      type: front-end
 note: you can only add names and labels under metadata or specifications from k8s 
-spec: # This provides additional information about the object to create. it varies per object
-  containers:  list/array
+- spec: # This provides additional information about the object to create. it varies per object
+-  containers:  list/array
       - name: nginx-container  # first item in the list
         image: nginx
       - name:
