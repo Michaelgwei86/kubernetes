@@ -110,3 +110,10 @@ systemctl daemon-reload
 systemctl start kubelet
 systemctl enable kubelet.service
 ```
+# Exit as root and run this command as a normal user
+```sh
+su - ubuntu
+```
+```sh
+kubeadm init
+```
