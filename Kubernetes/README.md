@@ -147,10 +147,11 @@ spec: # This provides additional information about the object to create. it vari
 
 +  example:
 ```sh
+cat <<EOF | sudo tee nginx-pod.yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  name: nginx-pod
+  name: nginx
   labels:
     app: nginx
 spec:
@@ -159,21 +160,32 @@ spec:
     image: nginx:latest
     ports:
     - containerPort: 80
----
+EOF
+
+```
+```sh
+cat <<EOF | sudo tee nginx-nodeport-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-loadbalancer-service
+  name: nginx-nodeport
 spec:
   selector:
     app: nginx
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
-  type: LoadBalancer
-
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 30036
+  type: NodePort
+EOF
 ```
+kubectl apply -f nginx-nodeport-service.yaml
+
+```sh
+kubectl apply -f nginx-clusterip-service.yaml
+```
+
 ```sh
 - kubectl apply/create -f <filename> #to create declaratively from a yml file
 - kubectl get/describe pods <podname> #to get the pod spec
@@ -182,10 +194,9 @@ spec:
 - kubectl edit pod <podname>
 ```
 ### 2. *DEPLOYMENTS:*
-+ When you want to deploy an application, you may want to deploy several pods of that application for high 
-availability. When a newer version of that application is available in docker, you want to gradually update
-to avoid downtime of the application.
-suppose an update has issues, you will want to do a rollback to the previous working version   
++ When you want to deploy an application, you may want to deploy several pods of that application for high availability.
++ When a newer version of that application is available in docker, you want to gradually update to avoid downtime of the application.
++ Suppose an update has issues, you will want to do a rollback to the previous working version   
 + You can also make changes such as resources and the number of pods.
 + Deployment provides the capability to upgrade the underlying instance such as rolling update, pause, upgrade, Rollback,
 + In creating a deployment, a ReplicaSet and Pod are created in the background
@@ -212,19 +223,21 @@ spec:
         - containerPort: 80
 
 ---
+cat <<EOF | sudo tee nginx-nodeport-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-service
+  name: nginx-svc
 spec:
   selector:
     app: nginx
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
-  type: LoadBalancer
-
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 30035
+  type: NodePort
+EOF
 ```
 ```sh
 kubectl get deployment
