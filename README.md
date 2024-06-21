@@ -1,25 +1,8 @@
-How to Provision VM for a Kubernetes Cluster with 1Master $ 2Worker Nodes:
+How to Provision a Kubernetes Cluster with Kubeadm:
 ==========================================================================
 ## 1. Prerequisite: VirtualBox and Vagrant
-Select the appropriate OS
-```sh
-https://download.virtualbox.org/virtualbox/7.0.10/VirtualBox-7.0.10-158379-Win.exe
-```
-## Follow the link to install Vagrant:
-```sh
-https://developer.hashicorp.com/vagrant/tutorials/getting-started/getting-started-install
-```
-You can use an already configured vagrant from;
-```sh
-git clone https://github.com/kodekloudhub/certified-kubernetes-administrator-course.git
-```
-cd dir
-- vagrant status
-- vagrant up
-- vagrant status
-- ssh into all the nodes
-- vagrant ssh kubemaster
-
+two aws t2.medium Ubuntu instances
+Security group with port 22, 80 and 443
 ## Install kubeadm Doc:
 
 1.  [Install Kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl)
