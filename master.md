@@ -5,7 +5,7 @@
 + 1 Master (4GB RAM , 2 Core) t2.medium
 + 2 Workers (1 GB, 1 Core) t2.micro
 + Create Security Group and open required ports for kubernetes.
-+ Open all port for this illustration
++ Open all port for this illustration or refer to [required ports](https://kubernetes.io/docs/reference/networking/ports-and-protocols/)
 + Attach Security Group to EC2 Instance/nodes.
 + Assign hostname & login as ‘root’ user because the following set of commands need to be executed with ‘sudo’ permissions.
 ```sh
