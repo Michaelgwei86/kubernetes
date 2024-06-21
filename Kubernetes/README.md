@@ -128,7 +128,7 @@ complete -o default -F __start_kubectl k
 kubectl run nginx --image nginx
 ```
 it creates a pod call nginx and also pulls the image nginx from a public docker repo 
-
+```sh
 - apiVersion: # this is the version of the k8s API, it is mandatory Pod: v1 , service: v1 
 - #replicaSet: apps/v1 , Deployment: apps/v1. It is also a string value 
 - kind: # This refers to the type of object to be created such as Pod, ReplicaSet, Deployment, etc string
@@ -144,7 +144,7 @@ note: you can only add names and labels under metadata or specifications from k8
         image: nginx
       - name:
         image:
-
+```
 +  example:
 ```sh
 cat <<EOF | sudo tee nginx-pod.yaml
