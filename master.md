@@ -13,6 +13,10 @@ sudo hostnamectl set-hostname master
 sudo -i
 ```
 ```sh
+vi master.sh
+```
++ paste the script below and run sh _master.sh_
+```sh
 #!/bin/bash
 # common.sh
 # copy this script and run in all master and worker nodes
