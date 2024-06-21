@@ -38,6 +38,8 @@ EOF
 ```
 ```sh
 sudo modprobe overlay
+```
+```sh
 sudo modprobe br_netfilter
 ```
 ```sh
@@ -55,6 +57,8 @@ sudo sysctl --system
 Verify that the br_netfilter, overlay modules are loaded by running the following commands:
 ```sh
 lsmod | grep br_netfilter
+```
+```sh
 lsmod | grep overlay
 ```
 Verify that all system variables are set to 1:
