@@ -120,6 +120,6 @@ sudo su - ubuntu
 # Copy kubeadm join token from the master and execute in Worker Nodes to join to cluster
 # Replace this token with yours from your master node
 ```sh
-sudo kubeadm join 10.0.0.11:6443 --token 03em5o.agjpy9wbj98izbpn \
-        --discovery-token-ca-cert-hash sha256:92a1cf1e452961a550f05eff32f25500fc9bcfd5d5f771689e8ee21b6a0da243
+sudo kubeadm join 172.31.20.118:6443 --token imfsm5.bf4trb3dcy31b1gd \
+        --discovery-token-ca-cert-hash sha256:d1a35f2aa94c728eadb12b7bbbee4b8814a2445f278d59f2dacf4cb2289bfe4d
 ```
