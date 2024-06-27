@@ -373,7 +373,8 @@ spec:
     nodePort: 30012
   type: NodePort
 EOF
----
+```
+```sh
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
