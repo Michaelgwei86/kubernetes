@@ -362,51 +362,40 @@ cat <<EOF | sudo tee sts-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-sts-svc
+  name: sts-service
 spec:
-  selector:
-    apps: nginx
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 80
-    nodePort: 30012
   type: NodePort
+  ports:
+  - port: 80
+    targetPort: web
+    nodePort: 30007
+  selector:
+    app: example
 EOF
 ```
 ```sh
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: web
+  name: hilltop-sts
 spec:
-  serviceName: "nginx-sts-svc"
-  replicas: 2
+  serviceName: "sts-service"
+  replicas: 5
   selector:
     matchLabels:
-      apps: nginx
+      app: example
   template:
     metadata:
       labels:
-        apps: nginx
+        app: example
     spec:
       containers:
-      - name: nginx
-        image: registry.k8s.io/nginx-slim:0.8
+      - name: web
+        image: nginx:1.17.1
         ports:
         - containerPort: 80
           name: web
-        volumeMounts:
-        - name: www
-          mountPath: /usr/share/nginx/html
-  volumeClaimTemplates:
-  - metadata:
-      name: www
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 1Gi
+      terminationGracePeriodSeconds: 10
 ```
 
 # 5. *DEAMONSETS:*
