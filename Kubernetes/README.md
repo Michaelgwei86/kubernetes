@@ -272,6 +272,7 @@ Controllers are the brain behind k8s, they monitor k8s objects and respond accor
 - replication controller is replaced by replicasets
 - it maintains the desired number of pods specified in your object definition file 
 ```sh
+cat <<EOF | sudo tee nginx-sts.yaml
 apiVersion: v1
 kind: ReplicationController    #DEPRICATED
 metadata:
@@ -291,6 +292,7 @@ spec:
        - name: nginx-container
          image: nginx 
   replicas: 3
+EOF
 ```
 ```sh
 - kubectl create -f <filename>
@@ -356,14 +358,14 @@ k get pods
 + Ordered, automated rolling updates.
 https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/
 ```sh
-cat <<EOF | sudo tee deploy-service.yaml
+cat <<EOF | sudo tee sts-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  app: nginx
+  name: nginx-sts-svc
 spec:
   selector:
-    app: nginx
+    apps: nginx
   ports:
   - protocol: TCP
     port: 80
@@ -377,15 +379,15 @@ kind: StatefulSet
 metadata:
   name: web
 spec:
-  serviceName: "nginx"
+  serviceName: "nginx-sts-svc"
   replicas: 2
   selector:
     matchLabels:
-      app: nginx
+      apps: nginx
   template:
     metadata:
       labels:
-        app: nginx
+        apps: nginx
     spec:
       containers:
       - name: nginx
