@@ -356,19 +356,21 @@ k get pods
 + Ordered, automated rolling updates.
 https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/
 ```sh
+cat <<EOF | sudo tee deploy-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx
-  labels:
-    app: nginx
+  app: nginx
 spec:
-  ports:
-  - port: 80
-    name: web
-  clusterIP: None
   selector:
     app: nginx
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 30012
+  type: NodePort
+EOF
 ---
 apiVersion: apps/v1
 kind: StatefulSet
