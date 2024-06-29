@@ -5,42 +5,47 @@
 
 ## **INTRODUCTION**
 
-Kubernetes (often abbreviated as K8s) is an open-source platform designed to automate the deployment, scaling, and operation of containerized applications. It provides a robust framework to run distributed systems resiliently, managing the complexity of microservice architectures and ensuring that containerized applications run smoothly in various environments, from local development to large-scale production.
++ Kubernetes (often abbreviated as K8s) is an open-source platform designed to automate the deployment, scaling, and operation of containerized applications.
++ It provides a robust framework to run distributed systems resiliently, managing the complexity of microservice architectures.
++ ensuring that containerized applications run smoothly in various environments, from local development to large-scale production.
 
 ## History
 
-Kubernetes was originally developed by Google and is based on their experience running containerized applications in production. Google introduced Kubernetes as an open-source project in 2014. It is written in Go and has since become one of the most popular container orchestration platforms. The project is now maintained by the Cloud Native Computing Foundation (CNCF), which has fostered its growth and adoption across the industry.
++ Kubernetes was originally developed by Google and is based on their experience running containerized applications in production.
++ Google introduced Kubernetes as an open-source project in 2014. It is written in Go and has since become one of the most popular container orchestration platforms.
++ The project is now maintained by the Cloud Native Computing Foundation (CNCF), which has fostered its growth and adoption across the industry.
 
 ## **Key Features of Kubernetes**
-Kubernetes offers a robust set of features designed to meet the needs of modern containerized applications:
++ Kubernetes offers a robust set of features designed to meet the needs of modern containerized applications:
 
 ### 1. **Scaling**
 
-Kubernetes dynamically adjusts the number of running containers based on demand, ensuring optimal resource utilization. This adaptability helps reduce costs while maintaining a smooth user experience.
++ Kubernetes dynamically adjusts the number of running containers based on demand, ensuring optimal resource utilization.
++ This adaptability helps reduce costs while maintaining a smooth user experience.
 
 ### 2. **Load Balancing**
 
-Load balancing is integral to Kubernetes. It effectively distributes incoming traffic across multiple pods, ensuring high availability and optimal performance and preventing any single pod from becoming overloaded.
++ Load balancing is integral to Kubernetes. It effectively distributes incoming traffic across multiple pods, ensuring high availability and optimal performance and preventing any single pod from becoming overloaded.
 
 ### 3. **Self-Healing**
 
-Kubernetes’ self-healing capabilities minimize downtime. If a container or pod fails, it is automatically replaced, keeping your application running smoothly and ensuring consistent service delivery.
++ Kubernetes’ self-healing capabilities minimize downtime. If a container or pod fails, it is automatically replaced, keeping your application running smoothly and ensuring consistent service delivery.
 
 ### 4. **Service Discovery and Metadata**
 
-Service discovery is streamlined in Kubernetes, facilitating communication between different application components. Metadata enhances these interactions, simplifying the complexities associated with distributed systems.
++ Service discovery is streamlined in Kubernetes, facilitating communication between different application components. Metadata enhances these interactions, simplifying the complexities associated with distributed systems.
 
 ### 5. **Rolling Updates and Rollbacks**
 
-Kubernetes supports rolling updates to maintain continuous service availability. If an update causes issues, reverting to a previous stable version is quick and effortless.
++ Kubernetes supports rolling updates to maintain continuous service availability. If an update causes issues, reverting to a previous stable version is quick and effortless.
 
 ### 6. **Resource Management**
 
-Kubernetes allows for precise resource management by letting you define resource limits and requests for pods, ensuring efficient use of CPU and memory.
++ Kubernetes allows for precise resource management by letting you define resource limits and requests for pods, ensuring efficient use of CPU and memory.
 
 ### 7. **ConfigMaps, Secrets, and Environment Variables**
 
-Kubernetes uses ConfigMaps and Secrets for secure configuration management. These tools help store and manage sensitive information such as API keys and passwords securely, protecting them from unauthorized access.
++ Kubernetes uses ConfigMaps and Secrets for secure configuration management. These tools help store and manage sensitive information such as API keys and passwords securely, protecting them from unauthorized access.
 
 
 **KUBERNETES INSTALLATION:**
@@ -49,7 +54,8 @@ Kubernetes uses ConfigMaps and Secrets for secure configuration management. Thes
 3. [Install Kubeadm](https://github.com/HILL-TOPCONSULTANCY/kubernetes/blob/main/README.md) (self managed)
 4. EKS (managed)
 5. AKS
-6. Creat 3 Ubuntu EC2 Instances of t3 Medium
+6. GKE
+7. Creat 3 Ubuntu EC2 Instances of t3 Medium
 
 ## KUBERNETES ARCHITECTURE:
 
