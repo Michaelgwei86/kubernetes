@@ -298,9 +298,9 @@ EOF
 - kubectl create -f <filename>
 - kubectl get rc 
 ```
-#replicasets requires a selector field | it is not a must
-#It helps the replica set define what pods fall under it although pod spec has already been mentioned in the spec
-#This is because it can manage pods that were not created to be managed by the rs
++ replicasets requires a selector field | it is not a must
++ It helps the replica set define what pods fall under it although pod spec has already been mentioned in the spec
++ This is because it can manage pods that were not created to be managed by the rs
 ```sh
 apiVersion: apps/v1
 kind: ReplicaSet
@@ -338,9 +338,10 @@ spec:
 ```
 
 You can generate load on your pods by running the command
+
++ Run this in a separate terminal
++ So that the load generation continues and you can carry on with the rest of the steps
 ```sh
-# Run this in a separate terminal
-# so that the load generation continues and you can carry on with the rest of the steps
 kubectl run -i --tty load-generator --rm --image=nginx --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"
 ```
 ```sh
@@ -400,11 +401,10 @@ spec:
 
 # 5. *DEAMONSETS:*
 
-Deamonsets are like replicasets which help you run one instance of pods, but it runs one copy of your pod on every  
-node on the cluster.
-the deamonset ensures that one copy of the pod is always running on every node in the cluster.
-A use case is if you are deploying a log collecting or monitoring agent.
-objects like the kube-proxy and network use deamonsets because they have to run on every node.
++ Deamonsets are like replicasets which help you run one instance of pods, but it runs one copy of your pod on every node on the cluster.
++ The deamonset ensures that one copy of the pod is always running on every node in the cluster.
++ A use case is if you are deploying a log collecting or monitoring agent.
++ objects like the kube-proxy and network use deamonsets because they have to run on every node.
 ```sh
 apiVersion: apps/v1
 kind: DaemonSet
@@ -443,9 +443,9 @@ spec:
         volumeMounts:
         - name: varlog
           mountPath: /var/log
-      # it may be desirable to set a high priority class to ensure that a DaemonSet Pod
-      # preempts running Pods
-      # priorityClassName: important
+      #it may be desirable to set a high priority class to ensure that a DaemonSet Pod
+      #preempts running Pods
+      #priorityClassName: important
       terminationGracePeriodSeconds: 30
       volumes:
       - name: varlog
@@ -500,7 +500,7 @@ To access the application externally, the k8s service enables communication from
 ### 1. *ClusterIP*:
 + This default Service type assigns an IP address from a pool of IP addresses that your cluster has reserved for that purpose. CIDR
 + You can specify your cluster IP address as part of a Service creation request
-  - This type of service that allows communication between pods in a cluster is called cluster IP service.
++ This type of service that allows communication between pods in a cluster is called cluster IP service.
 ```sh
 apiVersion: v1
 Kind: Service
@@ -518,7 +518,7 @@ spec:
 kubectl create -f <filename>
 kubectl get svc 
 
-the service can be accessed by other pods in the cluster using the service name or ClusterIP
++ the service can be accessed by other pods in the cluster using the service name or ClusterIP
 
 ### 2. *NodePort*:
 + The k8s service maps a port on the Node to a port on the Pod(target)
@@ -544,15 +544,15 @@ kubectl create -f <filename>
 kubectl get svc 
 curl IP:30008
 ```
-- In the case of multiple pods running the same application, you need to maintain the labels and selector section with
-the same values. the service uses a random algorithm to route traffic to all pods with that same label.
-- If the pods are running on different nodes in the cluster, you can access them by calling the IP of any node in the  
++ In the case of multiple pods running the same application, you need to maintain the labels and selector section with the same values.
++ The service uses a random algorithm to route traffic to all pods with that same label.
++ If the pods are running on different nodes in the cluster, you can access them by calling the IP of any node in the  
 cluster. Service is a cluster-wide resource in k8s.
 
 ### 3. *LoadBalancer*:
-On cloud providers that support external load balancers, setting the type field to LoadBalancer provisions a load balancer for your Service. 
-The actual creation of the load balancer happens asynchronously, and information about the provisioned balancer is published in the Service's
-K8s have native support for cloud platforms 
++ On cloud providers that support external load balancers, setting the type field to LoadBalancer provisions a load balancer for your Service. 
++ The actual creation of the load balancer happens asynchronously, and information about the provisioned balancer is published in the Service's
++ K8s have native support for cloud platforms 
 ```sh
 apiVersion: v1
 kind: Service
