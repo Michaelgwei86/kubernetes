@@ -1,7 +1,7 @@
 # Kubernetes Setup Using Kubeadm In AWS EC2 Ubuntu Servers.
 # Prerequisite
 + AWS Acccount.
-+ Create 3 - Ubuntu Servers -- 18.04.
++ Create 3 - Ubuntu Servers -- 22.04.
 + 1 Master (4GB RAM , 2 Core) t2.medium
 + 2 Workers (1 GB, 1 Core) t2.micro
 + Create Security Group and open required ports for kubernetes.
