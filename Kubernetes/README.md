@@ -414,6 +414,7 @@ EOF
 + A use case is if you are deploying a log collecting or monitoring agent.
 + objects like the kube-proxy and network use deamonsets because they have to run on every node.
 ```sh
+cat <<EOF | sudo tee ds-deploy.yaml
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -459,6 +460,7 @@ spec:
       - name: varlog
         hostPath:
           path: /var/log
+EOF
 ```
 ```sh
 k create -f <filename>
