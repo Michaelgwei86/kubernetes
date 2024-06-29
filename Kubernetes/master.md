@@ -116,9 +116,9 @@ systemctl enable kubelet.service
 ```
 + Save and exit the file
 + run the following command to execute the script
-```
-sh master.sh
 ```sh
+sh master.sh
+```
 # Exit as root and run this command as a normal user ONLY ON THE MASTER NODE
 ```sh
 sudo su - ubuntu
