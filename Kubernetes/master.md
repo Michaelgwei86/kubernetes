@@ -132,6 +132,8 @@ mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
++ Copy the kubeadm join output from the master node and run it on the worker nodes using sudo
++ Do not clerar the output from the master node
 # To verify, if kubectl is working or not, run the following command.
 ```sh
 kubectl get pods -o wide -n kube-system
