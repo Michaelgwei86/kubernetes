@@ -381,6 +381,7 @@ spec:
 EOF
 ```
 ```sh
+cat <<EOF | sudo tee sts-deploy.yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -403,6 +404,7 @@ spec:
         - containerPort: 80
           name: web
       terminationGracePeriodSeconds: 10
+EOF
 ```
 
 # 5. *DEAMONSETS:*
