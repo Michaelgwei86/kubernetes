@@ -507,75 +507,183 @@ To access the application externally, the k8s service enables communication from
 
 ## TYPES:
 
-### 1. *ClusterIP*:
-+ This default Service type assigns an IP address from a pool of IP addresses that your cluster has reserved for that purpose. CIDR
-+ You can specify your cluster IP address as part of a Service creation request
-+ This type of service that allows communication between pods in a cluster is called cluster IP service.
+### Initial Setup: Deploy Nginx
+
+A. **Deployment Configuration:**
+
 ```sh
+cat <<EOF | sudo tee svc-deploy.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+EOF
+```
+
+### 1. ClusterIP Service
+
+**Definition and Use Case:**
+- **ClusterIP** is the default Kubernetes service type that assigns a service an internal IP address that can be used to access it from within the cluster. This service is ideal for applications that need to be accessible to other services within the same Kubernetes cluster but not externally.
+
+**Deploy ClusterIP Service:**
+
+1. Create the service definition:
+
+```yaml
+cat <<EOF | sudo tee clusterip-svc.yaml
 apiVersion: v1
-Kind: Service
-metadata: 
-  name: backend
+kind: Service
+metadata:
+  name: nginx-clusterip
 spec:
   type: ClusterIP
-  ports:
-    - targetPort: 80  # (port on Pod). it will assume port if not specified
-      port: 80 # port on service. this is a mandatory field
   selector:
-    app: myapp # This is the label that was used in the deployment metadata section
-    type: backend
+    app: nginx
+  ports:
+    - port: 80
+      targetPort: 80
+EOF
 ```
-kubectl create -f <filename>
-kubectl get svc 
 
-+ the service can be accessed by other pods in the cluster using the service name or ClusterIP
+Save this as `clusterip-svc.yaml` and deploy it:
 
-### 2. *NodePort*:
-+ The k8s service maps a port on the Node to a port on the Pod(target)
-+ The NodePort is a port range on the Node that gives external access. it ranges from 30000-32767
-+ If you set the type field to NodePort, the Kubernetes control plane allocates a port from a range specified by --service-node-port-range flag (default: 30000-32767)
-```sh
+```bash
+kubectl apply -f clusterip-svc.yaml
+```
+
+**Accessing the Application:**
+- Run a temporary pod and curl the service:
+
+```bash
+kubectl run curl --image=radial/busyboxplus:curl -i --tty
+```
+# Then in the shell
+```bash
+curl http://nginx-clusterip
+```
+
+**Delete the ClusterIP Service:**
+
+```bash
+kubectl delete svc nginx-clusterip
+```
+
+### 2. NodePort Service
+
+**Definition and Use Case:**
+- **NodePort** is a configuration that allows external traffic to get to a service by mapping a port on each node to the service. It's useful when direct access via Kubernetes cluster IP is not possible.
+
+**Deploy NodePort Service:**
+
+1. Create the service definition:
+
+```yaml
+cat <<EOF | sudo tee nodeport-service.yaml
 apiVersion: v1
 kind: Service
-metadata: 
-  name: myapp-svc
+metadata:
+  name: nginx-nodeport
 spec:
   type: NodePort
-  ports:
-    - targetPort: 80  # (port on Pod). it will assume port if not specified
-      port: 80 # port on service. This is a mandatory field
-      nodePort: 30008  #external node port on service 30000-32767. a random port will be allocated if not specified
   selector:
-    app: myapp # This is the label that was used in the deployment metadata section
-    type: front-end
+    app: nginx
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30007
+EOF
 ```
-```sh
-kubectl create -f <filename>
-kubectl get svc 
-curl IP:30008
-```
-+ In the case of multiple pods running the same application, you need to maintain the labels and selector section with the same values.
-+ The service uses a random algorithm to route traffic to all pods with that same label.
-+ If the pods are running on different nodes in the cluster, you can access them by calling the IP of any node in the  
-cluster. Service is a cluster-wide resource in k8s.
 
-### 3. *LoadBalancer*:
-+ On cloud providers that support external load balancers, setting the type field to LoadBalancer provisions a load balancer for your Service. 
-+ The actual creation of the load balancer happens asynchronously, and information about the provisioned balancer is published in the Service's
-+ K8s have native support for cloud platforms 
-```sh
+Save this as `nodeport-service.yaml` and deploy it:
+
+```bash
+kubectl apply -f nodeport-service.yaml
+```
+
+**Accessing the Application:**
+
+- Get the IP of any node:
+
+```bash
+kubectl get nodes -o wide
+```
+
+- Access Nginx using the Node IP and NodePort:
+
+```bash
+curl http://<Node_IP>:30007
+```
+
+**Delete the NodePort Service:**
+
+```bash
+kubectl delete svc nginx-nodeport
+```
+
+### 3. LoadBalancer Service
+
+**Definition and Use Case:**
+- **LoadBalancer** exposes the service externally through a cloud provider’s load balancer. This service type is most beneficial when running on a cloud platform that supports automatic load balancers, providing a way to distribute traffic across several instances of the application.
+
+**Deploy LoadBalancer Service:**
+
+1. Create the service definition:
+
+```yaml
+cat <<EOF | sudo tee loadbalancer-service.yaml
 apiVersion: v1
 kind: Service
-metadata: 
-  name: backend
+metadata:
+  name: nginx-loadbalancer
 spec:
   type: LoadBalancer
-  ports:
-    - targetPort: 80  # (port on Pod). it will assume port if not specified
-      port: 80 # port on service. this is a mandatory field
   selector:
-    app: myapp # This is the label that was used in the deployment metadata section
-    type: backend
+    app: nginx
+  ports:
+    - port: 80
+      targetPort: 80
+EOF
+```
+
+Save this as `loadbalancer-service.yaml` and deploy it:
+
+```bash
+kubectl apply -f loadbalancer-service.yaml
+```
+
+**Accessing the Application:**
+
+- Once deployed, the LoadBalancer service will provision an external IP:
+
+```bash
+kubectl get svc nginx-loadbalancer
+```
+
+- Use the external IP to access Nginx:
+
+```bash
+curl http://<External_IP>
+```
+
+**Delete the LoadBalancer Service:**
+
+```bash
+kubectl delete svc nginx-loadbalancer
 ```
 
 # STORAGE:
