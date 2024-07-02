@@ -567,6 +567,10 @@ kubectl apply -f clusterip-svc.yaml
 ```bash
 kubectl run curl --image=radial/busyboxplus:curl -i --tty
 ```
+or
+```bash
+kubectl run curl --image=radial/busyboxplus:curl -it --rm -- /bin/sh
+```
 # Then in the shell
 ```bash
 curl http://nginx-clusterip
