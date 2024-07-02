@@ -493,17 +493,12 @@ https://kubernetes.io/docs/concepts/services-networking/service/
 + Kubernetes service enables communication between various components within and outside the application and between other applications and users.
 + Services expose groups of Pods over a network.
 
- A full-stack web app typically has several pods such as frontend pods hosting a web server,
-  the backend hosting the app, and pods hosting a db. Kubernetes service can group all pod groups  
-  and provide a single backend to access the pods. you can create another service for all pods running the DB 
-  These pods for different applications can therefore be scaled like microservices without impacting the other.
-  A separate SVC for frontend, for backend, and db. 
-
-For external communication,
-
-the Kubernetes node has an IP, the host OS which is in the same network has an IP (private), and the pod has an ip but on  
-a separate network
-To access the application externally, the k8s service enables communication from pods on nodes
+ - A full-stack web app typically has several pods such as frontend pods hosting a web server,
+ - the backend hosting the app, and pods hosting a db. Kubernetes service can group all pod groups and provide a single backend to access the pods. you can create another service for all pods running the DB
+ - These pods for different applications can therefore be scaled like microservices without impacting the other.
+ - A separate SVC for frontend, for backend, and db.
+ - For external communication, the Kubernetes node has an IP, the host OS which is in the same network has an IP (private), and the pod has an ip but on a separate network
+ - To access the application externally, the k8s service enables communication from pods on nodes
 
 ## TYPES:
 
