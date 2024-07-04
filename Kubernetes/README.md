@@ -710,66 +710,89 @@ kubectl create configmap <ConfigName> --from-literal=APP_COLOR=blue \
 kubectl create configmap app-config --from-file=<pathtofile>
 ```
 ```sh
+cat <<EOF | sudo tee cm.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: app-config
+  name: webapp-color-cm
 data:
-  APP_COLOR: "blue"
-  APP_MODE: "prod"
+  app-color: green
+EOF
 ```
 kubectl get configmaps
 
 
 to inject the  env to the running container, add the envFrom section under the spec section  
 ```sh
-apiVersion: v1
-kind: Pod
+cat <<EOF | sudo tee deploy-cm.yaml
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: nginx-pod
+  creationTimestamp: null
   labels:
-    app: nginx
+    app: dep-web-color
+  name: dep-web-color
 spec:
-  containers:
-  - name: nginx
-    image: nginx:latest
-    envFrom:
-    - configMapRef:
-        name: app-config
-    ports:
-      - containerPort: 80
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dep-web-color
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: dep-web-color
+    spec:
+      containers:
+      - image: kodekloud/webapp-color:latest
+        name: webapp-color
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: APP_COLOR
+            valueFrom:
+              configMap:
+                name: webapp-color-cm
+EOF
 ```
 to create a resource, use kubectl create -f <filename>
 
 ```sh
+cat <<EOF | sudo tee svc-cm.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-service
+  creationTimestamp: null
+  labels:
+    run: webapp-color
+  name: webapp-color
 spec:
-  type: LoadBalancer
   ports:
-    - port: 80
-      targetPort: 80
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+    nodePort: 30080
   selector:
-    app: nginx
+    run: webapp-color
+  type: NodePort
+EOF
 ```
 You can also ref a single env from a configmap 
-
+```sh
 env:
   - name: APP_COLOR
   valueFrom:
     configMapKeyRef:
-      name: app-config
-      key: APP_COLOR
-
+      name: webapp-color-cm
+      key: app-color
+```
 You can also inject it as a volume
-
+```sh
 volumes:
 - name: app-config-volume
   ConfigMap:
-    name: app-config
-
+    name: webapp-color-cm
+```
 ### 2. *emptyDir:*
 
 + An emptyDir volume is created when the Pod is assigned to a node, the emptyDir volume is initially empty
@@ -803,7 +826,6 @@ spec:
 ```sh
 # This manifest mounts /data/foo on the host as /foo inside the
 # single container that runs within the hostpath-example-linux Pod.
-#
 # The mount into the container is read-only.
 apiVersion: v1
 kind: Pod
