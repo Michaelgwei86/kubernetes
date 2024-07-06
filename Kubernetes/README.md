@@ -985,6 +985,287 @@ The reclaim policy for a PersistentVolume tells the cluster what to do with the 
 + Reclaim
 + Delete
 
+
+### NAMESPACES:
+
+  A namespace is simply a distinct working area in k8s where a defined set of resources rules and users can  
+  be assigned to a namespace. 
+- By default, a k8s cluster comes with a default namespace. Here, a user can provision resources.
+- the subsystem namespace is also created by default for a set of pods and services for its functioning.
+- The kubepublic is also created to host resources that are made available to the public.
+- Within a cluster, you can create different namespaces for different projects and allocate resources to that namespace.
+- Resources from the same namespaces can refer to each other by their names,
+- they can also communicate with resources from another namespace by their names and append their namespace.
+eg msql.connect("db-service.dev.svc.cluster.local")
+```sh
+kubectl get pods > will list only pods in the default namespace
+kubectl get pods --namespace=kubesystem
+
+kubectl apply -f <filename>  ==> will create object in the default namespace
+kubectl create -f <filename> --namespace=kubesystem  ==> will create object in the kubesystem namespace
+```
+To ensure that your resources are always created in a specific namespace, add the namespace block in the resources
+definition file
+```sh
+apiVersion: v1
+Kind: Service
+metadata: 
+  name: backend
+  namespace: dev  # This resource will always be created in the dev namespace, and will create the ns if it didn't exist
+spec:
+  type: LoadBalancer
+  ports:
+    - targetPort: 80  # (port on Pod). it will assume port if not specified
+      port: 80 # port on service. this is a mandatory field
+  selector:
+    app: myapp # This is the label that was used in the deployment metadata section
+    type: backend
+```
+
+```sh
+apiVersion: v1
+Kind: NameSpace
+metadata:
+  name: dev
+```
+OR 
+ kubectl create namespace dev
+ kubectl get ns 
+
+to set a namespace as the default namespace so that you don't always have to pass the NameSpace command, you need to set
+set the namespace in the current context
+
+kubectl config set-context $(kubectl config current-context) --namespace=dev
+contexts are used to manage all resources in clusters from a single system 
+
+To view resources in all NameSpaces use the 
+kubectl get pods --all-namespaces
+
+### Resource Quota:
+To set a limit for resources in a namespace, create a resource-quota object in
+```sh
+apiVersion: v1
+Kind: ResourceQuota
+metadata:
+  name: compute-quota
+  namespace: dev
+spec:
+  hard:
+    pods: "10"
+    requests.cpu: "4"
+    requests.memory: 5Gi
+    limits.cpu: "10"
+    limits.memory: 10Gi
+```
+kubectl apply -f <filename>
+
+### Declarative and Imperative :
+  these are different approaches to creating and managing infrastructure in IaC.
+- The Imperative approach is giving just the required infrastructure and the resource figures out the steps involved.
+eg kubectl create deployment nginx --image nginx
+    kubectl set image deployment nginx nginx=nginx:1.18
+    kubectl replace -f nginx.yaml
+
+    it creates resources quickly but is difficult to edit or understand what is involved.
+
+- in the Declarative approach, a step-by-step approach through writing configuration files
+   Here we can write configuration files 
+   Here, changes can be made as well as the resources can be versioned.
+   resources can also be edited in the running state using the kubectl edit command
+   The best practice is always to edit the configuration file and run the replace command rather than using the edit command.
+
+   when you use the kubectl apply command, it will create objects that do not exist, and when you want to update the object,
+   edit the yml file and run kubectl apply again and the object will pick up the latest changes in the file.
+```sh
+kubectl run --image=nginx nginx 
+kubectl create deployment --image=nginx nginx 
+kubectl edit deployment nginx 
+kubectl scale deployment nginx --replicas=5
+kubectl set image deployment nginx nginx=nginxv
+```
+```sh
+kubectl run nginx --image=nginx --dry-run=client -o yaml    > nginx-deployment.yaml
+kubectl create service clusterip redis --tcp=6379:6379 --dry-run=client -o yaml 
+kubectl expose pod nginx --type=NodePort --port=80 --name=nginx-service --dry-run=client -o yaml
+k create deploy redis-deploy --image=redis --replicas=2 --namespace=dev-ns
+kubectl run httpd --image=httpd:alpine --port=80 --expose   #will create pod and service
+```
+when you run a kubectl apply command, if the object stated in the file does not exist, it is created.
+another live object configuration is created with additional fields and can be viewed using the  
+- kubectl edit/describe object <objectName>
+there is the last applied file that provides details about the last image of the live configuration.
+
+
+### SCHEDULING:
+
+- there is a builtin scheduler in the cluster control-plane, that scans through nodes in the cluster and schedules
+  pods on nodes based on several factors such as resources,
+- But if you want to override and schedule your pods on specific nodes for some reason, you can do that by
+  specifying the nodeName in the pod definition file.
+- If a scheduler does not exist in the cluster, the pod will continually be pending.
+- If you need a pod to run on a specific node, declare it at the time of creation.
+- Kubernetes does not allow node modification after the pod has already been created.
+- It can only be modified by creating a binding object setting the target to the NodeName and then sending a post 
+ request to the pod's binding API.
+```sh
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  -  image: nginx
+     name: nginx
+  nodeName: controlplane
+```
+## RESOURCE REQUIREMENTS:
+
+- every pod requires a set of resources to run.
+when a pod is placed on a node, it consumes the resources on that node.
+the scheduler determines the node a pod will be scheduled on based on resource availability.
+if nodes have insufficient resources, the scheduler keeps the pod in a pending state.
+- You can specify the resource requested by  a pod to run.
+the scheduler will look for a node that has that resource specification and place that pod on it.
+```sh
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+    resources:
+      requests:
+        memory: "4Gi"
+        cpu: 2
+      limits:
+        memory: 
+        cpu: 
+  nodeName: controlplane
+```
+
+- When a pod tries to exceed resources out of its limits, the system throttles the containers so that it doesn't
+  use more than its limit,
+- as for memory, a container can use more memory resources than its limit. but a pod cannot
+- By default, k8s does not have a request and limit set, therefore resources can consume as much as they need.
+- One pod can consume more and prevent others from running.
+- When a CPU limit is set without request, k8s sets the request to the same as the limit
+- When CPU requests and limits are set, then they stay within the range. But if one pod isn't consuming resources,
+  then it is securing resources that other pods could use.
+- When requests are set without limits, any pods can consume as many CPUs are required and when a pod needs more  
+  resources, it has a guaranteed resource but without a limit. Make sure all pods have requests set.
+
+LimitRanges as objects can be used to ensure that every pod created has some default values at the namespace level.
+You can set it for both CPU and memory at the ns level. all pods will assume that standard.
+ResourceQuota can also be used to set resource limits at the level of the NameSpace.
+
+## QUALITY OF SERVICE IN KUBERNETES:
+
+Kubernetes offers three levels of Quality of Service:
+
++ 1. **BestEffort:**
+   - Pods with BestEffort QoS are not guaranteed any specific amount of resources.
+   - They are scheduled onto nodes based on availability, and they can use whatever resources are available at that time.
+   - These pods are the first to be evicted if resources become scarce.
+
++ 2. **Burstable:**
+   - Pods with Burstable QoS are guaranteed a minimum amount of CPU and memory.
+   - These pods can burst beyond their guaranteed minimum if the resources are available.
+   - If other pods on the node need resources, Burstable QoS pods might be limited in their burst capacity.
+
++ 3. **Guaranteed:**
+   - Pods with Guaranteed QoS are guaranteed a specific amount of CPU and memory.
+   - These pods are not allowed to exceed the resources they have been allocated.
+   - Kubernetes tries to ensure that nodes have enough available resources to meet the guaranteed requirements.
+
+Kubernetes determines the QoS level of pods based on the resource requests and limits specified in the pod's configuration:
+
+- **Resource Requests:** The minimum amount of resources a pod requires to run. 
+    These requests are used by the scheduler to make placement decisions.
+- **Resource Limits:** The maximum amount of resources a pod is allowed to use.
+    Exceeding these limits could lead to throttling or pod termination.
+
+Kubernetes uses the relationship between requests and limits to categorize pods into different QoS classes. 
+The actual QoS class assigned to a pod depends on how its requests and limits are set:
+
+- **BestEffort:** Pods with no resource requests or limits.
+- **Burstable:** Pods with resource requests, but without memory limits or with memory limits lower than their requests.
+- **Guaranteed:** Pods with both CPU and memory limits set to be higher than or equal to their resource requests.
+
+Setting appropriate resource requests and limits for pods is crucial for efficient resource allocation and QoS management 
+within a Kubernetes cluster. Properly configured QoS levels help ensure that critical workloads are prioritized 
+and that the cluster operates smoothly without resource contention issues.
+
+## STATIC PODS:
+
+- Without the control-plane which contains the API server, you can store your configuration files at the path 
+  /etc/kubernetes/manifest,.
+- kubernetes frequently visit this directory and any manifest file here to create pods will create the pod.
+- it can create only pods, another object will need the controlplane
+- The static pod folder can be any directory, but the path is set in the kubelet.service file in the kubeconfig.yaml
+- Static pods can be viewed by running the docker ps command.
+- The kubelet can create resources in k8s either by using configuration files or by listening to the kube API endpoints
+  from the control controlplane.
+- If you run the k get pods command, it will also list the static pods. This is blc a mirror of the static pods that are  
+- created in the kubeapi but like other pods, can not be edited, except in the pod definition files.
+- A use case for static pods is when you want to install components of the k8s control plane on every node, then you start 
+  by installing the kubelet service and then create pod definition files that use docker images of all other 
+  components of the controlplane and place them in the etc/kubernetes/manifest dir
+
+kubectl get pods -n kube-system
+
+## Multiple Schedulers:
+
+You can deploy an optional scheduler added to the custom scheduler and configure it to schedule specific pods.
+you can use a pod definition file or wget the scheduler binary and remane the scheduler to a different name.
+to make sure that your object to be created is managed by that scheduler, you can add a scheduler option under
+the spec section and pass the name of the scheduler.
+
+kubectl logs object objectname
+
+scheduling queu ===> priority sort
+filtering       ===> NodeName/NodeUnschedulable/NodeReourceFit
+scoring         ===> NodeReourceFit/ImageLocality
+binding         ===> Defaultbinding
+
+
+## APPLICATION LIFECYCLE MANAGEMENT:
+
+## 1. *Rolling Update and rollback:*
+  when you first create a deployment, it triggers a rollout which can be rev 1
+  later when the image is updated, a new rollout is made called rev2
+  to see the status of the rollout, run the  
+  kubectl rollout status deployment/<deploymentname>
+
+  to see the revision and the rollout history, run the
+   kubectl rollout history deployment/myapp-deployment
+
+there are two types of deployment strategies.
+
+## 2. *RECREATE:*
+- You can delete the existing deployment and then make a new deployment with the newer version
+- This will lead to app downtime. this is not the k8s default strategy.
+  
+## 3. ROLLING UPDATE:
+- Here, pods replicas are progressively destroyed and replaced with newer pods to ensure there is no downtime 
+- This is the k8s default update strategy.
+
+update can be done by changing the version of the image, replicas  
+kubectl apply -f <filename>
+
+it is advisable to manually edit the definition file than using the imperative approach because with an Imperative,
+changes will not be saved in the definition file.
+
+to rollback run the kubectl rollout undo deployment/myapp-deployment
+```sh
+kubectl apply -f deployment
+kubectl get deployment
+kubectl rollout status deployment/myapp-deployment
+kubectl rollout history deployment/myapp-deployment
+kubectl rollout undo deployment/app 
+```
+
  # SECURITY:
 Security in Kubernetes is mainly in the area of 
 * Securing the configurable cluster components
@@ -1636,287 +1917,6 @@ References:-
 https://kubernetes.io/docs/concepts/services-networking/ingress
 
 https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types    
-
-
-### NAMESPACES:
-
-  A namespace is simply a distinct working area in k8s where a defined set of resources rules and users can  
-  be assigned to a namespace. 
-- By default, a k8s cluster comes with a default namespace. Here, a user can provision resources.
-- the subsystem namespace is also created by default for a set of pods and services for its functioning.
-- The kubepublic is also created to host resources that are made available to the public.
-- Within a cluster, you can create different namespaces for different projects and allocate resources to that namespace.
-- Resources from the same namespaces can refer to each other by their names,
-- they can also communicate with resources from another namespace by their names and append their namespace.
-eg msql.connect("db-service.dev.svc.cluster.local")
-```sh
-kubectl get pods > will list only pods in the default namespace
-kubectl get pods --namespace=kubesystem
-
-kubectl apply -f <filename>  ==> will create object in the default namespace
-kubectl create -f <filename> --namespace=kubesystem  ==> will create object in the kubesystem namespace
-```
-To ensure that your resources are always created in a specific namespace, add the namespace block in the resources
-definition file
-```sh
-apiVersion: v1
-Kind: Service
-metadata: 
-  name: backend
-  namespace: dev  # This resource will always be created in the dev namespace, and will create the ns if it didn't exist
-spec:
-  type: LoadBalancer
-  ports:
-    - targetPort: 80  # (port on Pod). it will assume port if not specified
-      port: 80 # port on service. this is a mandatory field
-  selector:
-    app: myapp # This is the label that was used in the deployment metadata section
-    type: backend
-```
-
-```sh
-apiVersion: v1
-Kind: NameSpace
-metadata:
-  name: dev
-```
-OR 
- kubectl create namespace dev
- kubectl get ns 
-
-to set a namespace as the default namespace so that you don't always have to pass the NameSpace command, you need to set
-set the namespace in the current context
-
-kubectl config set-context $(kubectl config current-context) --namespace=dev
-contexts are used to manage all resources in clusters from a single system 
-
-To view resources in all NameSpaces use the 
-kubectl get pods --all-namespaces
-
-### Resource Quota:
-To set a limit for resources in a namespace, create a resource-quota object in
-```sh
-apiVersion: v1
-Kind: ResourceQuota
-metadata:
-  name: compute-quota
-  namespace: dev
-spec:
-  hard:
-    pods: "10"
-    requests.cpu: "4"
-    requests.memory: 5Gi
-    limits.cpu: "10"
-    limits.memory: 10Gi
-```
-kubectl apply -f <filename>
-
-### Declarative and Imperative :
-  these are different approaches to creating and managing infrastructure in IaC.
-- The Imperative approach is giving just the required infrastructure and the resource figures out the steps involved.
-eg kubectl create deployment nginx --image nginx
-    kubectl set image deployment nginx nginx=nginx:1.18
-    kubectl replace -f nginx.yaml
-
-    it creates resources quickly but is difficult to edit or understand what is involved.
-
-- in the Declarative approach, a step-by-step approach through writing configuration files
-   Here we can write configuration files 
-   Here, changes can be made as well as the resources can be versioned.
-   resources can also be edited in the running state using the kubectl edit command
-   The best practice is always to edit the configuration file and run the replace command rather than using the edit command.
-
-   when you use the kubectl apply command, it will create objects that do not exist, and when you want to update the object,
-   edit the yml file and run kubectl apply again and the object will pick up the latest changes in the file.
-```sh
-kubectl run --image=nginx nginx 
-kubectl create deployment --image=nginx nginx 
-kubectl edit deployment nginx 
-kubectl scale deployment nginx --replicas=5
-kubectl set image deployment nginx nginx=nginxv
-```
-```sh
-kubectl run nginx --image=nginx --dry-run=client -o yaml    > nginx-deployment.yaml
-kubectl create service clusterip redis --tcp=6379:6379 --dry-run=client -o yaml 
-kubectl expose pod nginx --type=NodePort --port=80 --name=nginx-service --dry-run=client -o yaml
-k create deploy redis-deploy --image=redis --replicas=2 --namespace=dev-ns
-kubectl run httpd --image=httpd:alpine --port=80 --expose   #will create pod and service
-```
-when you run a kubectl apply command, if the object stated in the file does not exist, it is created.
-another live object configuration is created with additional fields and can be viewed using the  
-- kubectl edit/describe object <objectName>
-there is the last applied file that provides details about the last image of the live configuration.
-
-
-### SCHEDULING:
-
-- there is a builtin scheduler in the cluster control-plane, that scans through nodes in the cluster and schedules
-  pods on nodes based on several factors such as resources,
-- But if you want to override and schedule your pods on specific nodes for some reason, you can do that by
-  specifying the nodeName in the pod definition file.
-- If a scheduler does not exist in the cluster, the pod will continually be pending.
-- If you need a pod to run on a specific node, declare it at the time of creation.
-- Kubernetes does not allow node modification after the pod has already been created.
-- It can only be modified by creating a binding object setting the target to the NodeName and then sending a post 
- request to the pod's binding API.
-```sh
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nginx
-spec:
-  containers:
-  -  image: nginx
-     name: nginx
-  nodeName: controlplane
-```
-## RESOURCE REQUIREMENTS:
-
-- every pod requires a set of resources to run.
-when a pod is placed on a node, it consumes the resources on that node.
-the scheduler determines the node a pod will be scheduled on based on resource availability.
-if nodes have insufficient resources, the scheduler keeps the pod in a pending state.
-- You can specify the resource requested by  a pod to run.
-the scheduler will look for a node that has that resource specification and place that pod on it.
-```sh
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nginx
-spec:
-  containers:
-  - image: nginx
-    name: nginx
-    resources:
-      requests:
-        memory: "4Gi"
-        cpu: 2
-      limits:
-        memory: 
-        cpu: 
-  nodeName: controlplane
-```
-
-- When a pod tries to exceed resources out of its limits, the system throttles the containers so that it doesn't
-  use more than its limit,
-- as for memory, a container can use more memory resources than its limit. but a pod cannot
-- By default, k8s does not have a request and limit set, therefore resources can consume as much as they need.
-- One pod can consume more and prevent others from running.
-- When a CPU limit is set without request, k8s sets the request to the same as the limit
-- When CPU requests and limits are set, then they stay within the range. But if one pod isn't consuming resources,
-  then it is securing resources that other pods could use.
-- When requests are set without limits, any pods can consume as many CPUs are required and when a pod needs more  
-  resources, it has a guaranteed resource but without a limit. Make sure all pods have requests set.
-
-LimitRanges as objects can be used to ensure that every pod created has some default values at the namespace level.
-You can set it for both CPU and memory at the ns level. all pods will assume that standard.
-ResourceQuota can also be used to set resource limits at the level of the NameSpace.
-
-## QUALITY OF SERVICE IN KUBERNETES:
-
-Kubernetes offers three levels of Quality of Service:
-
-+ 1. **BestEffort:**
-   - Pods with BestEffort QoS are not guaranteed any specific amount of resources.
-   - They are scheduled onto nodes based on availability, and they can use whatever resources are available at that time.
-   - These pods are the first to be evicted if resources become scarce.
-
-+ 2. **Burstable:**
-   - Pods with Burstable QoS are guaranteed a minimum amount of CPU and memory.
-   - These pods can burst beyond their guaranteed minimum if the resources are available.
-   - If other pods on the node need resources, Burstable QoS pods might be limited in their burst capacity.
-
-+ 3. **Guaranteed:**
-   - Pods with Guaranteed QoS are guaranteed a specific amount of CPU and memory.
-   - These pods are not allowed to exceed the resources they have been allocated.
-   - Kubernetes tries to ensure that nodes have enough available resources to meet the guaranteed requirements.
-
-Kubernetes determines the QoS level of pods based on the resource requests and limits specified in the pod's configuration:
-
-- **Resource Requests:** The minimum amount of resources a pod requires to run. 
-    These requests are used by the scheduler to make placement decisions.
-- **Resource Limits:** The maximum amount of resources a pod is allowed to use.
-    Exceeding these limits could lead to throttling or pod termination.
-
-Kubernetes uses the relationship between requests and limits to categorize pods into different QoS classes. 
-The actual QoS class assigned to a pod depends on how its requests and limits are set:
-
-- **BestEffort:** Pods with no resource requests or limits.
-- **Burstable:** Pods with resource requests, but without memory limits or with memory limits lower than their requests.
-- **Guaranteed:** Pods with both CPU and memory limits set to be higher than or equal to their resource requests.
-
-Setting appropriate resource requests and limits for pods is crucial for efficient resource allocation and QoS management 
-within a Kubernetes cluster. Properly configured QoS levels help ensure that critical workloads are prioritized 
-and that the cluster operates smoothly without resource contention issues.
-
-## STATIC PODS:
-
-- Without the control-plane which contains the API server, you can store your configuration files at the path 
-  /etc/kubernetes/manifest,.
-- kubernetes frequently visit this directory and any manifest file here to create pods will create the pod.
-- it can create only pods, another object will need the controlplane
-- The static pod folder can be any directory, but the path is set in the kubelet.service file in the kubeconfig.yaml
-- Static pods can be viewed by running the docker ps command.
-- The kubelet can create resources in k8s either by using configuration files or by listening to the kube API endpoints
-  from the control controlplane.
-- If you run the k get pods command, it will also list the static pods. This is blc a mirror of the static pods that are  
-- created in the kubeapi but like other pods, can not be edited, except in the pod definition files.
-- A use case for static pods is when you want to install components of the k8s control plane on every node, then you start 
-  by installing the kubelet service and then create pod definition files that use docker images of all other 
-  components of the controlplane and place them in the etc/kubernetes/manifest dir
-
-kubectl get pods -n kube-system
-
-## Multiple Schedulers:
-
-You can deploy an optional scheduler added to the custom scheduler and configure it to schedule specific pods.
-you can use a pod definition file or wget the scheduler binary and remane the scheduler to a different name.
-to make sure that your object to be created is managed by that scheduler, you can add a scheduler option under
-the spec section and pass the name of the scheduler.
-
-kubectl logs object objectname
-
-scheduling queu ===> priority sort
-filtering       ===> NodeName/NodeUnschedulable/NodeReourceFit
-scoring         ===> NodeReourceFit/ImageLocality
-binding         ===> Defaultbinding
-
-
-## APPLICATION LIFECYCLE MANAGEMENT:
-
-## 1. *Rolling Update and rollback:*
-  when you first create a deployment, it triggers a rollout which can be rev 1
-  later when the image is updated, a new rollout is made called rev2
-  to see the status of the rollout, run the  
-  kubectl rollout status deployment/<deploymentname>
-
-  to see the revision and the rollout history, run the
-   kubectl rollout history deployment/myapp-deployment
-
-there are two types of deployment strategies.
-
-## 2. *RECREATE:*
-- You can delete the existing deployment and then make a new deployment with the newer version
-- This will lead to app downtime. this is not the k8s default strategy.
-  
-## 3. ROLLING UPDATE:
-- Here, pods replicas are progressively destroyed and replaced with newer pods to ensure there is no downtime 
-- This is the k8s default update strategy.
-
-update can be done by changing the version of the image, replicas  
-kubectl apply -f <filename>
-
-it is advisable to manually edit the definition file than using the imperative approach because with an Imperative,
-changes will not be saved in the definition file.
-
-to rollback run the kubectl rollout undo deployment/myapp-deployment
-```sh
-kubectl apply -f deployment
-kubectl get deployment
-kubectl rollout status deployment/myapp-deployment
-kubectl rollout history deployment/myapp-deployment
-kubectl rollout undo deployment/app 
-```
 
 ## Multi Container PODS:
 
