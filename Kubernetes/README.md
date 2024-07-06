@@ -1004,6 +1004,74 @@ kubectl get pods --namespace=kubesystem
 kubectl apply -f <filename>  ==> will create object in the default namespace
 kubectl create -f <filename> --namespace=kubesystem  ==> will create object in the kubesystem namespace
 ```
+
+### Context
+A **context** 
++ in Kubernetes is a configuration that combines a cluster, a user, and a namespace into a single, reusable entity.
++ Contexts are defined in the kubeconfig file, which is typically located at `~/.kube/config`.
+
+- **Cluster**: Refers to the specific Kubernetes cluster.
+- **User**: Specifies the credentials used to access the cluster.
+- **Namespace**: Sets a default namespace to use for kubectl commands within the context.
+
++ By switching contexts, you change the cluster, user, and/or namespace that kubectl interacts with by default.
+
+**Commands to manage contexts:**
+- List all contexts:
+  ```sh
+  kubectl config get-contexts
+  ```
+- Display the current context:
+  ```sh
+  kubectl config current-context
+  ```
+- Switch to a different context:
+  ```sh
+  kubectl config use-context <context-name>
+  ```
+
+### Namespace
+A **namespace** 
++ is a way to divide cluster resources between multiple users via virtual clusters. Namespaces provide a mechanism for isolating groups of resources within a single cluster.
++ They are especially useful in larger environments where teams or projects need their own spaces for resources.
+
+**Key points about namespaces:**
+- Namespaces are a way to organize and isolate resources within a cluster.
+- Namespaces do not provide complete isolation; they are intended for logical separation rather than security.
+- Each resource created in Kubernetes belongs to a namespace, except for cluster-wide resources (like nodes and persistent volumes) which are not namespaced.
+
+**Commands to manage namespaces:**
+- List all namespaces:
+  ```sh
+  kubectl get namespaces
+  ```
+- Create a new namespace:
+  ```sh
+  kubectl create namespace <namespace-name>
+  ```
+- Set the default namespace for the current context:
+  ```sh
+  kubectl config set-context --current --namespace=<namespace-name>
+  ```
+
+### Example
+Consider a scenario where you have two contexts defined in your kubeconfig:
+- `dev-context` pointing to the development cluster with namespace `development`.
+- `prod-context` pointing to the production cluster with namespace `production`.
+
+Switching contexts changes both the cluster and namespace:
+```sh
+kubectl config use-context dev-context
+kubectl config use-context prod-context
+```
+
+Setting a namespace within a context only changes the namespace for that context:
+```sh
+kubectl config set-context --current --namespace=staging
+```
+
+ [Kubernetes official documentation on using contexts](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/#context).
+
 To ensure that your resources are always created in a specific namespace, add the namespace block in the resources
 definition file
 ```sh
