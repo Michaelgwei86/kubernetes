@@ -571,7 +571,7 @@ or
 ```bash
 kubectl run curl --image=radial/busyboxplus:curl -it --rm -- /bin/sh
 ```
-# Then in the shell
++ Then in the shell
 ```bash
 curl http://nginx-clusterip
 ```
