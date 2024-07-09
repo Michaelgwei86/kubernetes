@@ -134,7 +134,7 @@ complete -o default -F __start_kubectl k
 kubectl run nginx --image nginx
 ```
 it creates a pod call nginx and also pulls the image nginx from a public docker repo 
-```sh
+```yaml
 - apiVersion: # this is the version of the k8s API, it is mandatory Pod: v1 , service: v1 
 - #replicaSet: apps/v1 , Deployment: apps/v1. It is also a string value 
 - kind: # This refers to the type of object to be created such as Pod, ReplicaSet, Deployment, etc string
@@ -152,7 +152,7 @@ note: you can only add names and labels under metadata or specifications from k8
         image:
 ```
 +  example:
-```sh
+```yaml
 cat <<EOF | sudo tee nginx-pod.yaml
 apiVersion: v1
 kind: Pod
@@ -169,7 +169,7 @@ spec:
 EOF
 
 ```
-```sh
+```yaml
 cat <<EOF | sudo tee nginx-nodeport-service.yaml
 apiVersion: v1
 kind: Service
@@ -214,7 +214,7 @@ kubectl get service -o wide
 + Deployment provides the capability to upgrade the underlying instance such as rolling update, pause, upgrade, Rollback,
 + In creating a deployment, a ReplicaSet and Pod are created in the background
 
-```sh
+```yaml
 cat <<EOF | sudo tee deploy.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -237,7 +237,7 @@ spec:
         - containerPort: 80
 EOF
 ```
-```sh
+```yaml
 cat <<EOF | sudo tee deploy-service.yaml
 apiVersion: v1
 kind: Service
@@ -277,7 +277,7 @@ Controllers are the brain behind k8s, they monitor k8s objects and respond accor
 - It creates pods across nodes to balance the load
 - replication controller is replaced by replicasets
 - it maintains the desired number of pods specified in your object definition file 
-```sh
+```yaml
 cat <<EOF | sudo tee nginx-sts.yaml
 apiVersion: v1
 kind: ReplicationController    #DEPRICATED
@@ -307,7 +307,7 @@ EOF
 + replicasets requires a selector field | it is not a must
 + It helps the replica set define what pods fall under it although pod spec has already been mentioned in the spec
 + This is because it can manage pods that were not created to be managed by the rs
-```sh
+```yaml
 apiVersion: apps/v1
 kind: ReplicaSet
 metadata: 
@@ -328,7 +328,7 @@ spec:
 ### AUTOSCALER
 https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/
 You can use a Horizontal Pod AutoScaler (HPA)
-```sh
+```yaml
 #kubectl autoscale rs myapp-rc --cpu-percent=50 --min=1 --max=10
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
@@ -364,7 +364,7 @@ k get pods
 + Ordered, graceful deployment and scaling.
 + Ordered, automated rolling updates.
 https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/
-```sh
+```yaml
 cat <<EOF | sudo tee sts-service.yaml
 apiVersion: v1
 kind: Service
@@ -380,7 +380,7 @@ spec:
     app: example
 EOF
 ```
-```sh
+```yaml
 cat <<EOF | sudo tee sts-deploy.yaml
 apiVersion: apps/v1
 kind: StatefulSet
@@ -413,7 +413,7 @@ EOF
 + The deamonset ensures that one copy of the pod is always running on every node in the cluster.
 + A use case is if you are deploying a log collecting or monitoring agent.
 + objects like the kube-proxy and network use deamonsets because they have to run on every node.
-```sh
+```yaml
 cat <<EOF | sudo tee ds-deploy.yaml
 apiVersion: apps/v1
 kind: DaemonSet
@@ -506,7 +506,7 @@ https://kubernetes.io/docs/concepts/services-networking/service/
 
 A. **Deployment Configuration:**
 
-```sh
+```yaml
 cat <<EOF | sudo tee svc-deploy.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -709,7 +709,7 @@ kubectl create configmap <ConfigName> --from-literal=APP_COLOR=blue \
                    OR 
 kubectl create configmap app-config --from-file=<pathtofile>
 ```
-```sh
+```yaml
 cat <<EOF | sudo tee cm.yaml
 apiVersion: v1
 kind: ConfigMap
