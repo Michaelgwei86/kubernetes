@@ -926,7 +926,7 @@ https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
 
 + A PersistentVolume (PV) is a piece of storage in the cluster that has been provisioned by an administrator
 + PVs are volume plugins like Volumes, but have a lifecycle independent of any individual Pod that uses the PV
-```sh
+```yaml
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -946,7 +946,7 @@ spec:
 + A PersistentVolumeClaim (PVC) is a request for storage by a user. 
 + Pods consume node resources and PVCs consume PV resources.
 + While Pods can request specific levels of resources (CPU and Memory), Claims can request specific size and access modes (e.g., they can be mounted ReadWriteOnce, ReadOnlyMany, ReadWriteMany, or ReadWriteOncePod,)
-```sh
+```yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -959,7 +959,7 @@ spec:
     requests:
       storage: 3Gi
 ```
-```sh
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -982,7 +982,7 @@ spec:
 ## Volume Lifecycle:
 The reclaim policy for a PersistentVolume tells the cluster what to do with the volume after it has been released of its claim
 + Recycle
-+ Reclaim
++ Retain
 + Delete
 
 
@@ -1074,7 +1074,7 @@ kubectl config set-context --current --namespace=staging
 
 To ensure that your resources are always created in a specific namespace, add the namespace block in the resources
 definition file
-```sh
+```yaml
 apiVersion: v1
 Kind: Service
 metadata: 
@@ -1090,7 +1090,7 @@ spec:
     type: backend
 ```
 
-```sh
+```yaml
 apiVersion: v1
 Kind: NameSpace
 metadata:
@@ -1111,7 +1111,7 @@ kubectl get pods --all-namespaces
 
 ### Resource Quota:
 To set a limit for resources in a namespace, create a resource-quota object in
-```sh
+```yaml
 apiVersion: v1
 Kind: ResourceQuota
 metadata:
@@ -1175,7 +1175,7 @@ there is the last applied file that provides details about the last image of the
 - Kubernetes does not allow node modification after the pod has already been created.
 - It can only be modified by creating a binding object setting the target to the NodeName and then sending a post 
  request to the pod's binding API.
-```sh
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -1194,7 +1194,7 @@ the scheduler determines the node a pod will be scheduled on based on resource a
 if nodes have insufficient resources, the scheduler keeps the pod in a pending state.
 - You can specify the resource requested by  a pod to run.
 the scheduler will look for a node that has that resource specification and place that pod on it.
-```sh
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
