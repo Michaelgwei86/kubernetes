@@ -1482,11 +1482,10 @@ kubectl auth can-i list pods --namespace devops --as prince
  + The API request attributes being authorized are either the user, group, resource, verb, namespace path, etc
  + 
 ### Authorization Modes
-
-1. # [Attribut Based Access Control ABAC](https://kubernetes.io/docs/reference/access-authn-authz/abac/)
+## 1. [Attribut Based Access Control ABAC](https://kubernetes.io/docs/reference/access-authn-authz/abac/)
 + Rights are granted to users through the use of policies that combine attributes.
 + The policies can use any type of attribute (user, resource, object, environment, etc)
-#Examples
++ Examples
 + Mysuer can do anything to all resources:
 ```sh
 {"apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": {"user": "prince", "namespace": "*", "resource": "*", "apiGroup": "*"}}
@@ -1495,7 +1494,7 @@ kubectl auth can-i list pods --namespace devops --as prince
 ```sh
 {"apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": {"user": "prince", "namespace": "projectCaribou", "resource": "pods", "readonly": true}}
 ```
-2.# [Role Based Access Control RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
+## 2. [Role Based Access Control RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
 
 + This is a way of authorization where users in the cluster are permitted to perform actions based on their role in the company
 + This generally follows the principles of least privilege
@@ -1576,7 +1575,6 @@ roleRef:
   kind: ClusterRole
   name: secret-reader
   apiGroup: rbac.authorization.k8s.io
-
 ```
 
 # NETWORKING:
@@ -1801,7 +1799,6 @@ k logs -n kube-system <podname> # to see the proxy configured on the pod
 
 ## DNS RESOLUTION IN K8S:
 
-
 - k8s objects within a cluster can refer to each other by calling the ip addresses of the objects within the same namespace.
   If an object is to communicate with another object on the dev namespace, the name of the object will be appended by  
   the name of the NameSpace.
@@ -1985,7 +1982,6 @@ spec:
         servicePort: 80
 ```
 kubectl create ingress ingress-wear -n <Namespace> --rule="/wear=wear-service:8080"
-
 
 k describe ingress ingress-resource-rules
 
@@ -2227,7 +2223,6 @@ ls /var/lib/etcd-from-backup
 vi /etc/kubernetes/manifest/etcd.yaml
 
 edit the Hostpath and add /var/etcd-from-backup
-
 
 *NOTE*:
 
