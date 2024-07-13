@@ -1455,7 +1455,7 @@ EOF
 
 + First, you need to add new credentials:
 ```sh
-kubectl config set-credentials prince --client-key=prince.key --client-certificate=myuser.crt --embed-certs=true
+kubectl config set-credentials prince --client-key=prince.key --client-certificate=prince.crt --embed-certs=true
 ```
 ### 9. Then, you need to add the context:
 ```sh
@@ -1470,7 +1470,7 @@ kubectl config use-context prince
 kubectl config current-context
 ```
 ```sh
-kubectl auth can-i list pods --namespace devops --as prince
+kubectl auth can-i list pods --namespace devops
 ```
 + If you install Kubernetes with kubeadm, most certificates are stored in `/etc/kubernetes/pki`.
   https://kubernetes.io/docs/setup/best-practices/certificates/
