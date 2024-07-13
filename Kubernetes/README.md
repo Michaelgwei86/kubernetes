@@ -1413,16 +1413,42 @@ kubectl get csr/prince -o yaml
 ```sh
 kubectl get csr prince -o jsonpath='{.status.certificate}'| base64 -d > prince.crt
 ```
+
+
 ### 7. Create Role and RoleBinding
 + With the certificate created it is time to define the Role and RoleBinding for this user to access Kubernetes cluster resources.
 
 + This is a sample command to create a Role for this new user:
 ```sh
-kubectl create role developer --verb=create --verb=get --verb=list --verb=update --verb=delete --resource=pods
+cat <<EOF | kubectl apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: devops
+  name: devops-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "deployment" "secrets" "services"]
+  verbs: ["get", "list", "watch"]
+EOF
 ```
 + This is a sample command to create a RoleBinding for this new user:
 ```sh
-kubectl create rolebinding developer-binding-prince --role=developer --user=prince
+cat <<EOF | kubectl apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: devops-role-binding
+  namespace: devops
+subjects:
+- kind: User
+  name: prince
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: devops-role
+  apiGroup: rbac.authorization.k8s.io
+EOF
 ```
 ### 8. Add to kubeconfig
 + The last step is to add this user into the kubeconfig file.
@@ -1439,17 +1465,16 @@ kubectl config set-context prince --cluster=kubernetes --user=prince
 ```sh
 kubectl config use-context prince
 ```
++ See the current context
 ```sh
 kubectl config current-context
-
 ```
 ```sh
-kubectl auth can-i list pods --namespace dev --as prince
+kubectl auth can-i list pods --namespace devops --as prince
 ```
-+ If you install Kubernetes with kubeadm, most certificates are stored in /etc/kubernetes/pki.
++ If you install Kubernetes with kubeadm, most certificates are stored in `/etc/kubernetes/pki`.
   https://kubernetes.io/docs/setup/best-practices/certificates/
-+ You can manage Kubeadm certificates here
-  https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/
++ [You can manage Kubeadm certificates here](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/)
   
  ## Authorization
  + After being authenticated into a k8s cluster, all API requests made by an authenticated user in the cluster must be authorized by the API server against all objects and processes
@@ -1457,10 +1482,8 @@ kubectl auth can-i list pods --namespace dev --as prince
  + The API request attributes being authorized are either the user, group, resource, verb, namespace path, etc
  + 
 ### Authorization Modes
-### Node
-+ Grant special permissions to the kubelet based on the pods they are scheduled to run
-### ABAC
-https://kubernetes.io/docs/reference/access-authn-authz/abac/
+
+1. # [Attribut Based Access Control ABAC](https://kubernetes.io/docs/reference/access-authn-authz/abac/)
 + Rights are granted to users through the use of policies that combine attributes.
 + The policies can use any type of attribute (user, resource, object, environment, etc)
 #Examples
@@ -1472,8 +1495,8 @@ https://kubernetes.io/docs/reference/access-authn-authz/abac/
 ```sh
 {"apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": {"user": "prince", "namespace": "projectCaribou", "resource": "pods", "readonly": true}}
 ```
-### RBAC
-https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+2.# [Role Based Access Control RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
+
 + This is a way of authorization where users in the cluster are permitted to perform actions based on their role in the company
 + This generally follows the principles of least privilege
 + To enable RBAC, start the apiserver with --authorization-mode=RBAC.
@@ -1483,7 +1506,9 @@ https://kubernetes.io/docs/reference/access-authn-authz/rbac/
 + A RoleBinding or ClusterRoleBinding is used to attach the ClusterRole or Role to the new user.
 
 ## *Role and RoleBinding Example:*
++ A role gives a user access to API Resources within a specific namespace
 ```sh
+cat <<EOF | kubectl apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -1493,10 +1518,14 @@ rules:
 - apiGroups: [""] # "" indicates the core API group
   resources: ["pods"]
   verbs: ["get", "watch", "list"]
----
+EOF
+```
+
++ This role binding allows "prince" to read pods in the "default" namespace.
++ You need to already have a Role named "pod-reader" in that namespace.
+```sh
+cat <<EOF | kubectl apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
-# This role binding allows "prince" to read pods in the "default" namespace.
-# You need to already have a Role named "pod-reader" in that namespace.
 kind: RoleBinding
 metadata:
   name: read-pods
@@ -1511,10 +1540,14 @@ roleRef:
   kind: Role #this must be Role or ClusterRole
   name: pod-reader # This must match the name of the Role or ClusterRole you wish to bind to
   apiGroup: rbac.authorization.k8s.io
-````
+```
 
 ## *ClusterRole and ClusterRoleBinding Example:*
++ A Cluster role grants a user access to peform specific functions with the entire cluser.
++ Even though they are action bound, they are not namespace bound
+  
 ```sh
+cat <<EOF | kubectl apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -1527,9 +1560,9 @@ rules:
   # objects is "secrets"
   resources: ["secrets"]
   verbs: ["get", "watch", "list"]
-
----
-
+```
+```sh
+cat <<EOF | kubectl apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
 # This cluster role binding allows anyone in the "manager" group to read secrets in any namespace.
 kind: ClusterRoleBinding
@@ -1543,6 +1576,7 @@ roleRef:
   kind: ClusterRole
   name: secret-reader
   apiGroup: rbac.authorization.k8s.io
+
 ```
 
 # NETWORKING:
