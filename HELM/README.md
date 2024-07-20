@@ -100,6 +100,24 @@ aws iam create-policy \
     --policy-document file://iam_policy.json
 ```
 
+2: **Install eksctl: eksctl is a command-line tool for creating and managing Kubernetes clusters on Amazon EKS.**
+```sh
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_Windows_amd64.zip" -o "eksctl.zip"
+unzip eksctl.zip -d /tmp
+```
+```sh
+mkdir -p /c/tools
+mv /tmp/eksctl.exe /c/tools/
+```
+```sh
+echo 'export PATH=$PATH:/c/tools' >> ~/.bashrc
+source ~/.bashrc
+eksctl version
+```
+3. **Associate IAM OIDC Provider:**
+```sh
+eksctl utils associate-iam-oidc-provider --region=us-west-2 --cluster=eks-hilltop-dev --approve
+```
 3. **Next, create a Kubernetes service account and an IAM role (for the pod running the AWS ALB Ingress controller) by substituting $PolicyARN with the recorded value from the previous step:**
 ```bash
 eksctl create iamserviceaccount \
@@ -107,7 +125,7 @@ eksctl create iamserviceaccount \
   --namespace=kube-system \
   --name=aws-load-balancer-controller \
   --role-name AmazonEKSLoadBalancerControllerRole \
-  --attach-policy-arn=arn:aws:iam::111122223333:policy/AWSLoadBalancerControllerIAMPolicy \
+  --attach-policy-arn=arn:aws:iam::905418026355:policy/AWSLoadBalancerControllerIAMPolicy \
   --approve
 ```
 
