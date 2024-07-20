@@ -6,11 +6,11 @@ metadata:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn }}
-    external-dns.alpha.kubernetes.io/hostname: {{ .Values.ingress.host }}
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.certificateArn }}
+    external-dns.alpha.kubernetes.io/hostname: {{ .Values.host }}
 spec:
   rules:
-    - host: {{ .Values.ingress.host }}
+    - host: {{ .Values.host }}
       http:
         paths:
           - path: /
@@ -19,4 +19,4 @@ spec:
               service:
                 name: {{ include "hilltop.fullname" . }}
                 port:
-                  number: {{ .Values.service.port }}
+                  number: 80
