@@ -5,10 +5,10 @@ metadata:
   labels:
     {{- include "hilltop.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: NodePort
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: 8080
-      nodePort: {{ .Values.service.nodePort }}
+    - port: 80
+      targetPort: 80
+      nodePort: 30080  # Ensure this port is within the NodePort range (30000-32767)
   selector:
-    {{- include "hilltop.selectorLabels" . | nindent 4 }}
+    {{- include "hilltop.selectorLabels" . | nindent 6 }}
