@@ -89,50 +89,55 @@ helm repo update eks
 
 ### Step 8: Set Up the IAM Role and Policy for ALB
 
-1. **Create IAM Policy:**
-   ```bash
-   curl -o iam_policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json
-   aws iam create-policy \
-     --policy-name AWSLoadBalancerControllerIAMPolicy \
-     --policy-document file://iam_policy.json
-   ```
+1. **deploy the relevant RBAC roles and role bindings as required by the AWS ALB Ingress controller:**
+```sh
+curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.7.2/docs/install/iam_policy.json
+```
+2. **Next, create an IAM policy named ALBIngressControllerIAMPolicy to allow the ALB Ingress controller to make AWS API calls on your behalf. Record the Policy.Arn in the command output, you will need it in the next step:**
+```bash
+aws iam create-policy \
+    --policy-name AWSLoadBalancerControllerIAMPolicy \
+    --policy-document file://iam_policy.json
+```
 
-2. **Create IAM Role:**
-   ```bash
-   eksctl create iamserviceaccount \
-     --cluster=eks-hilltop-dev \
-     --namespace=kube-system \
-     --name=aws-load-balancer-controller \
-     --role-name AmazonEKSLoadBalancerController \
-     --attach-policy-arn=arn:aws:iam::YOUR_ACCOUNT_ID:policy/AWSLoadBalancerControllerIAMPolicy \
-     --approve
-   ```
+3. **Next, create a Kubernetes service account and an IAM role (for the pod running the AWS ALB Ingress controller) by substituting $PolicyARN with the recorded value from the previous step:**
+```bash
+eksctl create iamserviceaccount \
+  --cluster=eks-hilltop-dev \
+  --namespace=kube-system \
+  --name=aws-load-balancer-controller \
+  --role-name AmazonEKSLoadBalancerControllerRole \
+  --attach-policy-arn=arn:aws:iam::111122223333:policy/AWSLoadBalancerControllerIAMPolicy \
+  --approve
+```
 
+4. **Step 2: Install AWS Load Balancer Controller**
+```sh
+helm repo add eks https://aws.github.io/eks-charts
+```
+5. **Update your local repo to make sure that you have the most recent charts.**
+```sh
+helm repo update eks
+```
+6. **Deploy deploy the AWS ALB Ingress controller:**
+```sh
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+  -n kube-system \
+  --set clusterName=eks-hilltop-dev \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller 
+```
+Step 7: **Verify that the controller is installed**
+```sh
+kubectl get deployment -n kube-system aws-load-balancer-controller
+```
 ### Step 9: Install the AWS Load Balancer Controller
 
 1. **Add the EKS Helm Repository:**
    ```bash
-   helm repo add eks https://aws.github.io/eks-charts
    helm repo update
    ```
-
-2. **Install the AWS Load Balancer Controller:**
-   ```bash
-   helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
-     -n kube-system \
-     --set clusterName=eks-hilltop-dev \
-     --set serviceAccount.create=false \
-     --set serviceAccount.name=aws-load-balancer-controller
-   ```
-
-3. **Apply the CRDs:**
-   ```bash
-   kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller/crds?ref=master"
-   ```
-
-### Step 10: Deploy Your Application with Ingress using Helm Chart
-
-Create a Helm chart named `hilltop`:
+2. **Create a Helm chart named `hilltop`:**
 
 ```bash
 helm create hilltop
