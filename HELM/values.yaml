@@ -2,18 +2,41 @@ replicaCount: 3
 
 image:
   repository: hilltopconsultancy/nodejs-app
-  tag: v1
   pullPolicy: IfNotPresent
-
+  tag: "v1"
 serviceAccount:
   name: "aws-load-balancer-controller"
+
 
 service:
   type: NodePort
   port: 80
-  nodePort: 30080
 
 ingress:
   enabled: true
-  certificateArn: "arn:aws:acm:REGION:ACCOUNT_ID:certificate/CERTIFICATE_ID"
-  host: "yourdomain.com"
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:905418026355:certificate/85970443-6a4a-4f65-a315-f3518c8722ec
+    external-dns.alpha.kubernetes.io/hostname: hilltop.com
+  hosts:
+    - host: hilltop.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: hilltop-tls
+      hosts:
+        - hilltop.com
+
+resources: {}
+
+autoscaling:
+  enabled: false
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
