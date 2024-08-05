@@ -16,26 +16,29 @@ Helm is a package manager for Kubernetes that simplifies the deployment and mana
 For Windows, you can download the Helm binary from the official Helm releases page:
 
 ```sh
-curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+curl -LO https://get.helm.sh/helm-v3.15.3-windows-amd64.zip
 ```
-
 ### Step 2: Extract and Move Binary
-
-Extract the downloaded file and move it to a directory in your system's PATH. For example:
-
 ```sh
-tar -zxvf helm-v3.7.0-linux-amd64.tar.gz
-mv linux-amd64/helm /usr/local/bin/helm
+unzip helm-v3.15.3-windows-amd64.zip
 ```
-
-### Step 3: Verify Installation
-
-Check if Helm is installed correctly by running:
-
+# Create the bin directory if it doesn't exist and move the helm.exe binary
+```sh
+mkdir -p ~/bin
+mv windows-amd64/helm.exe ~/bin/helm.exe
+```
+# Add ~/bin to PATH if it's not already included
+```sh
+echo 'export PATH=$PATH:/c/Users/mhono/bin' >> ~/.bashrc
+```
+# Reload the .bashrc file to apply changes
+```sh
+source ~/.bashrc
+```
+# Verify the installation
 ```sh
 helm version
 ```
-
 ## Getting Started with Helm
 
 ### Step 4: Add a Chart Repository
