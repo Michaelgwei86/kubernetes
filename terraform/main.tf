@@ -1,6 +1,6 @@
 locals {
   tags = {
-    created-by = "eks-hilltop"
+    created-by = "eks-effulgencetech"
     env        = var.cluster_name
   }
 }
